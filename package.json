@@ -36,6 +36,7 @@
     "concurrently": "^8.2.0",
     "fabric": "^5.3.0",
     "fix-webm-duration": "^1.0.5",
+    "jquery": "^3.6.0",
     "jszip": "^3.10.1",
     "localforage": "^1.10.0",
     "patch-package": "^8.0.0",
