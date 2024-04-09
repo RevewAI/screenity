@@ -26,6 +26,7 @@ const localDirectoryStore = localforage.createInstance({
   name: "localDirectory",
 });
 
+
 const startAfterCountdown = async () => {
   // Check that the recording didn't get dismissed
   const { recordingTab } = await chrome.storage.local.get(["recordingTab"]);

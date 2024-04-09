@@ -1,0 +1,37 @@
+{
+    "diffEditor.ignoreTrimWhitespace": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false,
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.autoSave": "off",
+    "javascript.format.enable": false,
+    "emmet.syntaxProfiles": {
+        "jsx": {
+            "markup.attributes": {
+                "class*": "className"
+            },
+            "markup.valuePrefix": {
+                "class*": "myStyles"
+            }
+        }
+    },
+    "search.exclude": {
+        "**/lerna-*": true,
+        "**/yarn-*": true,
+        "**/.stylelintcache": true,
+        "**/.eslintcache": true,
+        "**/.gitignore": true,
+        "**/.nyc_output": true,
+        "**/.vscode": true,
+        "**/.history": true,
+        "**/dist": true,
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/*.code-search": true,
+        "**/yarn.lock": true
+    },
+    "typescript.disableAutomaticTypeAcquisition": true,
+    "typescript.tsdk": "node_modules/typescript/lib"
+}

@@ -2910,6 +2910,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash-es@npm:4.17.12":
+  version: 4.17.12
+  resolution: "@types/lodash-es@npm:4.17.12"
+  dependencies:
+    "@types/lodash": "*"
+  checksum: 990a99e2243bebe9505cb5ad19fbc172beb4a8e00f9075c99fc06c46c2801ffdb40bc2867271cf580d5f48994fc9fb076ec92cd60a20e621603bf22114e5b077
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:*":
+  version: 4.17.0
+  resolution: "@types/lodash@npm:4.17.0"
+  checksum: 3f98c0b67a93994cbc3403d4fa9dbaf52b0b6bb7f07a764d73875c2dcd5ef91222621bd5bcf8eee7b417a74d175c2f7191b9f595f8603956fd06f0674c0cba93
+  languageName: node
+  linkType: hard
+
 "@types/long@npm:^4.0.1":
   version: 4.0.2
   resolution: "@types/long@npm:4.0.2"
@@ -4437,6 +4453,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dayjs@npm:1.11.10":
+  version: 1.11.10
+  resolution: "dayjs@npm:1.11.10"
+  checksum: a6b5a3813b8884f5cd557e2e6b7fa569f4c5d0c97aca9558e38534af4f2d60daafd3ff8c2000fed3435cfcec9e805bcebd99f90130c6d1c5ef524084ced588c4
+  languageName: node
+  linkType: hard
+
 "debug@npm:2.6.9":
   version: 2.6.9
   resolution: "debug@npm:2.6.9"
@@ -5412,6 +5435,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hamt_plus@npm:1.0.2":
+  version: 1.0.2
+  resolution: "hamt_plus@npm:1.0.2"
+  checksum: af26ea32db03009019cc83dfa9411521a2fa16079443de1a502c9be46d8b3c975acda8ed93fc5750ef08d3186d35901e2d8cfe717dd54bea67b358601fa74e4c
+  languageName: node
+  linkType: hard
+
 "handle-thing@npm:^2.0.0":
   version: 2.0.1
   resolution: "handle-thing@npm:2.0.1"
@@ -6047,7 +6077,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jquery@npm:^3.6.0":
+"jquery@npm:^3.7.1":
   version: 3.7.1
   resolution: "jquery@npm:3.7.1"
   checksum: 4370b8139d6ae82867eb6f7f21d1edccf1d1bdf41c0840920ea80d366c2cd5dbe1ceebb110ee9772aa839b04400faa1572c5c560b507c688ed7b61cea26c0e27
@@ -6310,6 +6340,13 @@ __metadata:
   dependencies:
     p-locate: ^6.0.0
   checksum: c1b653bdf29beaecb3d307dfb7c44d98a2a98a02ebe353c9ad055d1ac45d6ed4e1142563d222df9b9efebc2bcb7d4c792b507fad9e7150a04c29530b7db570f8
+  languageName: node
+  linkType: hard
+
+"lodash-es@npm:4.17.21":
+  version: 4.17.21
+  resolution: "lodash-es@npm:4.17.21"
+  checksum: 05cbffad6e2adbb331a4e16fbd826e7faee403a1a04873b82b42c0f22090f280839f85b95393f487c1303c8a3d2a010048bf06151a6cbe03eee4d388fb0a12d2
   languageName: node
   linkType: hard
 
@@ -7276,12 +7313,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^2.7.1":
-  version: 2.8.8
-  resolution: "prettier@npm:2.8.8"
+"prettier@npm:^3.2.5":
+  version: 3.2.5
+  resolution: "prettier@npm:3.2.5"
   bin:
-    prettier: bin-prettier.js
-  checksum: b49e409431bf129dd89238d64299ba80717b57ff5a6d1c1a8b1a28b590d998a34e083fa13573bc732bb8d2305becb4c9a4407f8486c81fa7d55100eb08263cf8
+    prettier: bin/prettier.cjs
+  checksum: 2ee4e1417572372afb7a13bb446b34f20f1bf1747db77cf6ccaf57a9be005f2f15c40f903d41a6b79eec3f57fff14d32a20fb6dee1f126da48908926fe43c311
   languageName: node
   linkType: hard
 
@@ -7671,6 +7708,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"recoil@npm:0.7.7":
+  version: 0.7.7
+  resolution: "recoil@npm:0.7.7"
+  dependencies:
+    hamt_plus: 1.0.2
+  peerDependencies:
+    react: ">=16.13.1"
+  peerDependenciesMeta:
+    react-dom:
+      optional: true
+    react-native:
+      optional: true
+  checksum: 65edecbcb8d2cde89bfd61ec679c200483472a6cd343c33e4e9142b6ce524fb17d1fecc2bfd8c392926aaa8178c81457f165b32abce2a9662f51f98822c0a9cc
+  languageName: node
+  linkType: hard
+
 "reeval-screenity@workspace:.":
   version: 0.0.0-use.local
   resolution: "reeval-screenity@workspace:."
@@ -7698,6 +7751,7 @@ __metadata:
     "@tensorflow/tfjs-backend-webgl": ^4.9.0
     "@tensorflow/tfjs-converter": ^4.9.0
     "@tensorflow/tfjs-core": ^4.13.0
+    "@types/lodash-es": 4.17.12
     "@types/react": ^17.0.52
     "@types/react-dom": ^17.0.11
     "@uiw/color-convert": ^1.2.2
@@ -7708,18 +7762,20 @@ __metadata:
     concurrently: ^8.2.0
     copy-webpack-plugin: ^7.0.0
     css-loader: ^6.7.2
+    dayjs: 1.11.10
     fabric: ^5.3.0
     fix-webm-duration: ^1.0.5
     fs-extra: ^10.1.0
     html-loader: ^3.1.0
     html-webpack-plugin: ^5.5.0
-    jquery: ^3.6.0
+    jquery: ^3.7.1
     jszip: ^3.10.1
     localforage: ^1.10.0
+    lodash-es: 4.17.21
     patch-package: ^8.0.0
     plyr: ^3.7.8
     plyr-react: ^5.3.0
-    prettier: ^2.7.1
+    prettier: ^3.2.5
     querystring: ^0.2.1
     raw-loader: ^4.0.2
     react: ^17.0.2
@@ -7729,6 +7785,7 @@ __metadata:
     react-rnd: ^10.4.1
     react-shadow: ^20.0.0
     react-svg: ^16.1.18
+    recoil: 0.7.7
     sass: ^1.53.0
     sass-loader: ^13.2.0
     source-map-loader: ^3.0.1
