@@ -1,18 +1,57 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
+import React, { useEffect, useState } from 'react';
 
 // Components
-import Wrapper from "./Wrapper";
+import Wrapper from './Wrapper';
 
 // Context
-import ContentState from "./context/ContentState";
+import ContentState from './context/ContentState';
+import { cleanReEvalURL } from '../Background/loadReEvalConfig';
+import { ReEvalURLsModal } from './ReEvalURLsModal';
 
 const Content = () => {
-  return (
-    <div className="screenity-shadow-dom">
-      <ContentState>
-        <Wrapper />
-      </ContentState>
-      <style type="text/css">{`
+    const storageKey = 'reeval-urls';
+    const [count, setCount] = useState(0);
+    const [openModal, setOpenModal] = useState(false);
+    const markURL = async () => {
+        try {
+            const { [storageKey]: urls = [] } = await chrome.storage.local.get([storageKey]);
+            // 不需要去重，一个页面可能出现多次
+            const urls$ = [...urls, window.location.href].map(cleanReEvalURL).filter(Boolean);
+            await chrome.storage.local.set({ [storageKey]: urls$ });
+            setCount(urls$.length);
+        } catch (e) {
+            console.log(e);
+        }
+    };
+
+    useEffect(() => {
+        chrome.storage.local.get([storageKey]).then(({ [storageKey]: urls }) => {
+            setCount(urls.length);
+        });
+
+        chrome.runtime.onMessage.addListener(function listener(request) {
+            if (request?.type === storageKey) {
+                setCount(request?.urls?.length);
+            }
+        });
+    }, []);
+
+    return (
+        <div className="screenity-shadow-dom">
+            <ContentState>
+                <Wrapper />
+            </ContentState>
+
+            <section className="reeval-ball" onClick={markURL}>
+                + ReEval
+            </section>
+            <section className="reeval-urls-count" onClick={() => setOpenModal(true)}>
+                {count}
+            </section>
+
+            <ReEvalURLsModal open={openModal} />
+
+            <style type="text/css">{`
 			#screenity-ui, #screenity-ui div {
 				background-color: unset;
 				padding: unset;
@@ -260,9 +299,53 @@ const Content = () => {
   }
 }
 
+.reeval-ball {
+  position: fixed;
+  right: 4px;
+  top: 32px;
+  z-index: 99999;
+  padding: 8px 16px;
+  background: #1772f6;
+  border-radius: 8px;
+  outline: auto;
+  color: #fff;
+  box-shadow: 11px 8px 8px 0px rgb(18 147 227 / 25%);
+  transform: rotate(45deg);
+  transition: all .3s;
+}
+
+.reeval-ball:hover {
+  background: rgb(18 147 227 / 85%);
+  cursor: pointer;
+  transition: all .3s;
+}
+
+.reeval-urls-count {
+  position: fixed;
+  top: 5px;
+  right: 75px;
+  min-width: 16px;
+  height: 16px;
+  background: #f00;
+  border-radius: 50%;
+  font-size: 12px;
+  border: 1px solid #fff;
+  color: #fff;
+  text-align: center;
+  line-height: 16px;
+  z-index: 1000000;
+  transform: rotate(45deg);
+}
+
+.reeval-urls-count:hover {
+  transform: scale(1.5);
+  transition: all 1s;
+  cursor: pointer;
+}
+
 `}</style>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default Content;

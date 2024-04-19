@@ -10,12 +10,14 @@ import { CameraOffBlue, MicOffBlue } from '../../images/popup/images';
 import BackgroundEffects from '../components/BackgroundEffects';
 
 import { AlertIcon, TimeIcon, NoInternet } from '../../toolbar/components/SVG';
+import { useSetRecoilState } from 'recoil';
+import { reevalAtom } from '../../store';
 
 const RecordingType = (props) => {
     const [contentState, setContentState] = useContext(contentStateContext);
     const [cropActive, setCropActive] = useState(false);
     const [time, setTime] = useState(0);
-    const [reeval, setReEval] = useState(false);
+    const setReEval = useSetRecoilState(reevalAtom);
     const [URL, setURL] = useState(
         'https://help.screenity.io/getting-started/77KizPC8MHVGfpKpqdux9D/what-are-the-technical-requirements-for-using-screenity/6kdB6qru6naVD8ZLFvX3m9'
     );
@@ -25,6 +27,25 @@ const RecordingType = (props) => {
 
     const buttonRef = useRef(null);
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+    const getReevalScript = async () => {
+        const url = window.location.href;
+        const title = document.title;
+        await fetch(url)
+            .then((response) => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then((html) => {
+                setReEval({
+                    url,
+                    title,
+                    content: html
+                });
+            });
+    };
 
     useEffect(() => {
         const locale = chrome.i18n.getMessage('@@ui_locale');
@@ -240,7 +261,10 @@ const RecordingType = (props) => {
                 </div>
             )}
 
-            <button className="main-button recording-button">获取录制脚本</button>
+            <button className="main-button recording-button" onClick={getReevalScript}>
+                获取录制脚本
+            </button>
+
             <button
                 role="button"
                 className="main-button recording-button"

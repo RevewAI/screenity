@@ -27,6 +27,8 @@
         "**/.vscode": true,
         "**/.history": true,
         "**/dist": true,
+        "**/build": true,
+        "**/patches": true,
         "**/node_modules": true,
         "**/bower_components": true,
         "**/*.code-search": true,

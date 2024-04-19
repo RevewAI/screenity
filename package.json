@@ -32,6 +32,7 @@
         "@tensorflow/tfjs-core": "^4.13.0",
         "@uiw/color-convert": "^1.2.2",
         "@uiw/react-color-wheel": "^1.2.2",
+        "antd": "5.16.2",
         "axios": "^1.6.2",
         "concurrently": "^8.2.0",
         "dayjs": "1.11.10",
