@@ -10,6 +10,7 @@
         "postinstall": "patch-package"
     },
     "dependencies": {
+        "@ant-design/icons": "5.3.6",
         "@hot-loader/react-dom": "^17.0.2",
         "@mediapipe/selfie_segmentation": "^0.1.1675465747",
         "@radix-ui/react-alert-dialog": "^1.0.4",

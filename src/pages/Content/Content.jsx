@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 // Components
 import Wrapper from './Wrapper';
+import { Button } from 'antd';
 
 // Context
 import ContentState from './context/ContentState';
@@ -26,12 +27,14 @@ const Content = () => {
 
     useEffect(() => {
         chrome.storage.local.get([storageKey]).then(({ [storageKey]: urls }) => {
-            setCount(urls.length);
+            setCount(urls?.length ?? 0);
         });
 
-        chrome.runtime.onMessage.addListener(function listener(request) {
-            if (request?.type === storageKey) {
-                setCount(request?.urls?.length);
+        chrome.storage.onChanged.addListener((changes, areaName) => {
+            if (areaName === 'local') {
+                const { newValue = [] } = changes?.[storageKey] ?? {};
+                console.log('ooOoo->', newValue);
+                setCount(newValue?.length);
             }
         });
     }, []);
@@ -49,7 +52,7 @@ const Content = () => {
                 {count}
             </section>
 
-            <ReEvalURLsModal open={openModal} />
+            {openModal && <ReEvalURLsModal open={openModal} onCancel={() => setOpenModal(false)} footer={false} />}
 
             <style type="text/css">{`
 			#screenity-ui, #screenity-ui div {
@@ -309,6 +312,9 @@ const Content = () => {
   border-radius: 8px;
   outline: auto;
   color: #fff;
+  font-size: 14px;
+  font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';
+  line-height: normal;
   box-shadow: 11px 8px 8px 0px rgb(18 147 227 / 25%);
   transform: rotate(45deg);
   transition: all .3s;
@@ -329,6 +335,7 @@ const Content = () => {
   background: #f00;
   border-radius: 50%;
   font-size: 12px;
+  font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';
   border: 1px solid #fff;
   color: #fff;
   text-align: center;

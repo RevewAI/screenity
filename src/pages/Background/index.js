@@ -1727,8 +1727,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 // });
 
 // tab 激活，向所在的tab发送信息
-chrome.tabs.onActivated.addListener(async ({ tabId }) => {
-    const storageKey = 'reeval-urls';
-    const { [storageKey]: urls = [] } = await chrome.storage.local.get([storageKey]);
-    await chrome.tabs.sendMessage(tabId, { type: storageKey, urls });
-});
+// chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+//     const storageKey = 'reeval-urls';
+//     const { [storageKey]: urls = [] } = await chrome.storage.local.get([storageKey]);
+//     await chrome.tabs.sendMessage(tabId, { type: storageKey, urls });
+// });
