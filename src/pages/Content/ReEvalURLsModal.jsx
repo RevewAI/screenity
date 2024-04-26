@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Space, Button, Input } from 'antd';
 import { MinusCircleOutlined, ArrowUpOutlined, ArrowDownOutlined, PlusCircleOutlined, EyeOutlined } from '@ant-design/icons';
+import { useRecoilValueLoadable } from 'recoil';
+import { pagesStore } from './store';
 
 export const ReEvalURLsModal = (props) => {
     const [form] = Form.useForm();
     const storageKey = 'reeval-urls';
+    const pages = useRecoilValue(pagesStore);
 
     const clear = async () => {
         await chrome.storage.local.remove([storageKey]);
@@ -83,6 +86,12 @@ export const ReEvalURLsModal = (props) => {
                                             <Form.Item noStyle name={[field.name, 'url']}>
                                                 <Input placeholder="URL" style={{ flex: 1 }} />
                                             </Form.Item>
+                                            <Form.Item noStyle name={[field.name, 'title']}>
+                                                <Input placeholder="title" style={{ flex: 1 }} />
+                                            </Form.Item>
+                                            {/* <Form.Item noStyle name={[field.name, 'guidance']}>
+                                                <Input placeholder="Guidance" style={{ flex: 1 }} />
+                                            </Form.Item> */}
                                             <Space size={0}>
                                                 <Button
                                                     type="text"
@@ -127,3 +136,5 @@ export const ReEvalURLsModal = (props) => {
         </Modal>
     );
 };
+
+// https://knitter.ai/videomaker/

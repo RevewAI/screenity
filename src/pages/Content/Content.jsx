@@ -1,28 +1,78 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState, useContext } from 'react';
 
 // Components
 import Wrapper from './Wrapper';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 
 // Context
 import ContentState from './context/ContentState';
 import { cleanReEvalURL } from '../Background/loadReEvalConfig';
 import { ReEvalURLsModal } from './ReEvalURLsModal';
+import axios from 'axios';
+import { Store, baseAjax, pagesStore, usePostPages, baseStore } from './store';
+import $ from 'jquery';
+import { useRecoilRefresher_UNSTABLE, useRecoilValueLoadable, useRecoilValue, useRecoilState, useSetRecoilState } from 'recoil';
+import { ReEvalModal } from './ReEvalModal';
+import { ReEvalRecord } from './ReEvalRecord';
+
+const ReEvalBtn = () => {
+    const postPage = usePostPages();
+    const setOpenModal = useSetRecoilState(baseStore(Store.OPEN_PAGES_MODAL));
+    const res = useRecoilValue(pagesStore);
+    const refresh = useRecoilRefresher_UNSTABLE(pagesStore);
+    const exist = res.data.find(({ url }) => {
+        return url === cleanReEvalURL(window.location.href);
+    });
+
+    const markURL = async () => {
+        try {
+            // const { [storageKey]: urls = [] } = await chrome.storage.local.get([storageKey]);
+            // // 不需要去重，一个页面可能出现多次
+            // const urls$ = [...urls, window.location.href].map(cleanReEvalURL).filter(Boolean);
+            // await chrome.storage.local.set({ [storageKey]: urls$ });
+            // setCount(urls$.length);
+            await postPage({
+                url: cleanReEvalURL(window.location.href),
+                title: document.title,
+                html_content: $('html').html()
+            });
+            refresh();
+            message.success('Add ReEval Success');
+        } catch (e) {
+            console.log(e);
+        }
+    };
+
+    const start = async () => {
+        console.log(111);
+        await chrome.runtime.sendMessage({ type: 'reeval-start-recording-test' });
+    };
+
+    return (
+        <>
+            {exist ? (
+                <section className="reeval-ball reeval-ball-added" onClick={start}>
+                    {/* <section className="reeval-ball reeval-ball-added" onClick={() => setOpenModal(true)}> */}
+                    ReEval Added
+                </section>
+            ) : (
+                <section className="reeval-ball" onClick={markURL}>
+                    + ReEval
+                </section>
+            )}
+        </>
+    );
+};
 
 const Content = () => {
     const storageKey = 'reeval-urls';
     const [count, setCount] = useState(0);
-    const [openModal, setOpenModal] = useState(false);
-    const markURL = async () => {
-        try {
-            const { [storageKey]: urls = [] } = await chrome.storage.local.get([storageKey]);
-            // 不需要去重，一个页面可能出现多次
-            const urls$ = [...urls, window.location.href].map(cleanReEvalURL).filter(Boolean);
-            await chrome.storage.local.set({ [storageKey]: urls$ });
-            setCount(urls$.length);
-        } catch (e) {
-            console.log(e);
-        }
+    const [openModal, setOpenModal] = useRecoilState(baseStore(Store.OPEN_PAGES_MODAL));
+    const { contents: pages } = useRecoilValueLoadable(pagesStore);
+
+    const test = () => {
+        console.log('send stop-recording-tab');
+        chrome.runtime.sendMessage({ type: 'stop-recording-tab' });
     };
 
     useEffect(() => {
@@ -33,7 +83,6 @@ const Content = () => {
         chrome.storage.onChanged.addListener((changes, areaName) => {
             if (areaName === 'local') {
                 const { newValue = [] } = changes?.[storageKey] ?? {};
-                console.log('ooOoo->', newValue);
                 setCount(newValue?.length);
             }
         });
@@ -43,16 +92,20 @@ const Content = () => {
         <div className="screenity-shadow-dom">
             <ContentState>
                 <Wrapper />
+                <ReEvalRecord />
             </ContentState>
 
-            <section className="reeval-ball" onClick={markURL}>
-                + ReEval
-            </section>
+            <Suspense fallback={<></>}>
+                <ReEvalBtn />
+            </Suspense>
+
             <section className="reeval-urls-count" onClick={() => setOpenModal(true)}>
-                {count}
+                {/* <section className="reeval-urls-count" onClick={test}> */}
+                {/* {count} */}
+                {pages?.data?.length}
             </section>
 
-            {openModal && <ReEvalURLsModal open={openModal} onCancel={() => setOpenModal(false)} footer={false} />}
+            {openModal && <ReEvalModal open={openModal} onCancel={() => setOpenModal(false)} footer={false} />}
 
             <style type="text/css">{`
 			#screenity-ui, #screenity-ui div {
@@ -320,6 +373,17 @@ const Content = () => {
   transition: all .3s;
 }
 
+.reeval-ball.reeval-ball-added {
+  right: 0px;
+  top: 44px;
+  font-size: 12px;
+  background: #f66b11;
+}
+
+.reeval-ball.reeval-ball-added:hover {
+  background: #f66b11;
+}
+
 .reeval-ball:hover {
   background: rgb(18 147 227 / 85%);
   cursor: pointer;
@@ -349,6 +413,8 @@ const Content = () => {
   transition: all 1s;
   cursor: pointer;
 }
+
+
 
 `}</style>
         </div>

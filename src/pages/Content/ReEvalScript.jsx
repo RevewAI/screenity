@@ -1,6 +1,4 @@
-import React, { useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
-import { reevalStore } from './store';
+import React from 'react';
 
 export const options = [
     {
@@ -74,7 +72,7 @@ export const options = [
 ];
 
 export const ReEvalScript = () => {
-    const data = useRecoilValue(reevalStore);
+    // const data = useRecoilValue(reevalStore);
     const runReEvalScript = () => {
         console.log('run reeval script');
         chrome.runtime.sendMessage({ type: 'reeval', options: options });

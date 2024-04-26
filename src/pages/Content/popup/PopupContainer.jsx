@@ -341,9 +341,9 @@ const PopupContainer = (props) => {
                         </div>
                     )}
 
-                    <Suspense fallback={<></>}>
+                    {/* <Suspense fallback={<></>}>
                         <ReEvalScript />
-                    </Suspense>
+                    </Suspense> */}
                 </div>
             </Rnd>
         </div>

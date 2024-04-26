@@ -262,10 +262,22 @@ export async function loadReEvalConfig(options) {
 /**
  * 执行ReEval脚本
  */
+// export async function runReEval(config) {
+//     const { source_content = '', position = 0, time_start, time_end } = config;
+//     // 滚动到脚本文本位置
+//     const { selector, sourceHTML } = scrollContent(source_content, position);
+//     // 脚本执行等待
+//     await sleep(timeDiff(time_end).diff(timeDiff(time_start)));
+//     // 删除高亮, 写回源信息
+//     selector && sourceHTML && $(selector).html(sourceHTML);
+// }
+
 export async function runReEval(config) {
-    const { source_content = '', position = 0, time_start, time_end } = config;
+    const { screen_recording } = config;
+    console.log(config);
+    const content = screen_recording?.original_sentences?.[0];
     // 滚动到脚本文本位置
-    const { selector, sourceHTML } = scrollContent(source_content, position);
+    const { selector, sourceHTML } = scrollContent(content);
     // 脚本执行等待
     await sleep(timeDiff(time_end).diff(timeDiff(time_start)));
     // 删除高亮, 写回源信息

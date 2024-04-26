@@ -29,11 +29,5 @@ module.exports = {
     // 根据显示样式决定 html 要不要折行 ignore
     htmlWhitespaceSensitivity: 'strict',
     // 换行符使用 lf
-    endOfLine: 'lf',
-    parser: 'typescript',
-    overrides: [
-        { files: ['*.json'], options: { parser: 'json', tabWidth: 4 } },
-        { files: '*.{css,sass,scss,less}', options: { parser: 'css', tabWidth: 4 } },
-        { files: '*.{ts,tsx}', options: { parser: 'typescript' } }
-    ]
+    endOfLine: 'lf'
 };

@@ -7,6 +7,7 @@ import localforage from 'localforage';
 // const debounce = require('lodash').debounce;
 
 import { sleep, runReEval, timeDiff } from './loadReEvalConfig';
+import { createWindow, removeWindowDefaultTab } from './bus';
 
 localforage.config({
     driver: localforage.INDEXEDDB,
@@ -40,7 +41,7 @@ const resetActiveTab = async () => {
 
     // Check if Chrome version is 109 or below
     if (navigator.userAgent.includes('Chrome/')) {
-        const version = parseInt(navigator.userAgent.match(/Chrome\/([0-9]+)/)[1]);
+        const version = parseInt(navigator.userAgent.match(/Chrome\/([0-9]+)/)[1], 10);
         if (version <= 109) {
             editor_url = 'editorfallback.html';
         }
@@ -218,7 +219,7 @@ const onActivated = async (activeInfo) => {
     if (recording) {
         // Check if region recording, and if the recording tab is the same as the current tab
         const { tabRecordedID } = await chrome.storage.local.get(['tabRecordedID']);
-        if (tabRecordedID && tabRecordedID != activeInfo.tabId) {
+        if (tabRecordedID && tabRecordedID !== activeInfo.tabId) {
             sendMessageTab(activeInfo.tabId, { type: 'hide-popup-recording' });
             // Check if active tab is not backup.html + chrome-extension://
         } else if (!(tab.url.includes('backup.html') && tab.url.includes('chrome-extension://'))) {
@@ -286,7 +287,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
         if (!recording && !restarting) {
             sendMessageTab(tabId, { type: 'recording-ended' });
-        } else if (recording && tabRecordedID && tabRecordedID == tabId) {
+        } else if (recording && tabRecordedID && tabRecordedID === tabId) {
             sendMessageTab(tabId, { type: 'recording-check', force: true });
         }
 
@@ -495,7 +496,7 @@ const stopRecording = async () => {
 
 const forceProcessing = async () => {
     // Need to create a new sandbox tab
-    let editor_url = 'editor.html';
+    const editor_url = 'editor.html';
 
     // Get sandbox tab
     const { sandboxTab } = await chrome.storage.local.get(['sandboxTab']);
@@ -527,6 +528,8 @@ chrome.runtime.onStartup.addListener(() => {
 
 // Check when action button is clicked
 chrome.action.onClicked.addListener(async (tab) => {
+    console.log('action', tab);
+
     // Check if recording
     const { recording } = await chrome.storage.local.get(['recording']);
     if (recording) {
@@ -585,14 +588,15 @@ const restartActiveTab = async () => {
 };
 
 const getStreamingData = async () => {
-    const { micActive, defaultAudioInput, defaultAudioOutput, defaultVideoInput, systemAudio, recordingType } =
+    const { micActive, defaultAudioInput, defaultAudioOutput, defaultVideoInput, systemAudio, recordingType, ReEvalProductionOption } =
         await chrome.storage.local.get([
             'micActive',
             'defaultAudioInput',
             'defaultAudioOutput',
             'defaultVideoInput',
             'systemAudio',
-            'recordingType'
+            'recordingType',
+            'ReEvalProductionOption'
         ]);
 
     return {
@@ -601,7 +605,8 @@ const getStreamingData = async () => {
         defaultAudioOutput,
         defaultVideoInput,
         systemAudio,
-        recordingType
+        recordingType,
+        ReEvalProductionOption
     };
 };
 
@@ -622,7 +627,7 @@ const handleRestart = async () => {
 
     // Check if Chrome version is 109 or below
     if (navigator.userAgent.includes('Chrome/')) {
-        const version = parseInt(navigator.userAgent.match(/Chrome\/([0-9]+)/)[1]);
+        const version = parseInt(navigator.userAgent.match(/Chrome\/([0-9]+)/)[1], 10);
         if (version <= 109) {
             editor_url = 'editorfallback.html';
         }
@@ -756,40 +761,41 @@ const offscreenDocument = async (request, tabId = null) => {
             try {
                 // This is following the steps from this page, but it still doesn't work :( https://developer.chrome.com/docs/extensions/mv3/screen_capture/#audio-and-video-offscreen-doc
                 throw new Error('Exit offscreen recording');
-                const existingContexts = await chrome.runtime.getContexts({});
+                // const existingContexts = await chrome.runtime.getContexts({});
 
-                const offDocument = existingContexts.find((c) => c.contextType === 'OFFSCREEN_DOCUMENT');
+                // const offDocument = existingContexts.find((c) => c.contextType === 'OFFSCREEN_DOCUMENT');
 
-                if (offDocument) {
-                    // If an offscreen document is already open, close it.
-                    await chrome.offscreen.closeDocument();
-                }
+                // if (offDocument) {
+                //     // If an offscreen document is already open, close it.
+                //     await chrome.offscreen.closeDocument();
+                // }
 
-                // Create an offscreen document.
-                await chrome.offscreen.createDocument({
-                    url: 'recorderoffscreen.html',
-                    reasons: ['USER_MEDIA', 'AUDIO_PLAYBACK', 'DISPLAY_MEDIA'],
-                    justification: 'Recording from getDisplayMedia API and tabCapture API'
-                });
+                // // Create an offscreen document.
+                // await chrome.offscreen.createDocument({
+                //     url: 'recorderoffscreen.html',
+                //     reasons: ['USER_MEDIA', 'AUDIO_PLAYBACK', 'DISPLAY_MEDIA'],
+                //     justification: 'Recording from getDisplayMedia API and tabCapture API'
+                // });
 
-                const streamId = await chrome.tabCapture.getMediaStreamId({
-                    targetTabId: activeTab.id
-                });
+                // const streamId = await chrome.tabCapture.getMediaStreamId({
+                //     targetTabId: activeTab.id
+                // });
 
-                chrome.storage.local.set({
-                    recordingTab: null,
-                    offscreen: true,
-                    region: false,
-                    wasRegion: true
-                });
-                sendMessageRecord({
-                    type: 'loaded',
-                    request: request,
-                    isTab: true,
-                    tabID: streamId
-                });
+                // chrome.storage.local.set({
+                //     recordingTab: null,
+                //     offscreen: true,
+                //     region: false,
+                //     wasRegion: true
+                // });
+                // sendMessageRecord({
+                //     type: 'loaded',
+                //     request: request,
+                //     isTab: true,
+                //     tabID: streamId
+                // });
             } catch (error) {
                 // Open the recorder.html page as a normal tab.
+                console.log('798->', error);
                 chrome.tabs
                     .create({
                         url: 'recorder.html',
@@ -867,6 +873,7 @@ const offscreenDocument = async (request, tabId = null) => {
             });
         } catch (error) {
             // Open the recorder.html page as a normal tab.
+            console.log('798->', error);
             let switchTab = true;
             if (request.camera) {
                 switchTab = false;
@@ -985,7 +992,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     }
     // Check chrome version, if 109 or below, disable backups
     if (navigator.userAgent.includes('Chrome/')) {
-        const version = parseInt(navigator.userAgent.match(/Chrome\/([0-9]+)/)[1]);
+        const version = parseInt(navigator.userAgent.match(/Chrome\/([0-9]+)/)[1], 10);
         if (version <= 109) {
             chrome.storage.local.set({ backup: false });
         }
@@ -1134,13 +1141,13 @@ const restoreRecording = async () => {
 
     // Check if Chrome version is 109 or below
     if (navigator.userAgent.includes('Chrome/')) {
-        const version = parseInt(navigator.userAgent.match(/Chrome\/([0-9]+)/)[1]);
+        const version = parseInt(navigator.userAgent.match(/Chrome\/([0-9]+)/)[1], 10);
         if (version <= 109) {
             editor_url = 'editorfallback.html';
         }
     }
 
-    let chunks = [];
+    const chunks = [];
     await chunksStore.iterate((value, key) => {
         chunks.push(value);
     });
@@ -1159,7 +1166,7 @@ const restoreRecording = async () => {
             chrome.storage.local.set({ sandboxTab: tab.id });
             // Wait for the tab to be loaded
             await new Promise((resolve) => {
-                chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+                chrome.tabs.onUpdated.addListener((tabId, info) => {
                     if (info.status === 'complete' && tabId === tab.id) {
                         sendMessageTab(tab.id, {
                             type: 'restore-recording'
@@ -1227,7 +1234,7 @@ const handleSaveToDrive = async (sendResponse, request, fallback = false) => {
         });
 
         // Build the video from chunks
-        let array = [];
+        const array = [];
         let lastTimestamp = 0;
         for (const chunk of chunks) {
             // Check if chunk timestamp is smaller than last timestamp, if so, skip
@@ -1256,7 +1263,7 @@ const desktopCapture = async (request) => {
             localDirectoryStore.clear();
         }
 
-        let activeTab = await getCurrentTab();
+        const activeTab = await getCurrentTab();
         initBackup(request, activeTab.id);
     } else {
         offscreenDocument(request);
@@ -1292,7 +1299,7 @@ const videoReady = async () => {
     stopRecording();
 };
 
-const newChunk = async (request) => {
+const newChunk = async (request, sendResponse) => {
     const { sandboxTab } = await chrome.storage.local.get(['sandboxTab']);
     sendMessageTab(sandboxTab, {
         type: 'new-chunk-tab',
@@ -1335,7 +1342,7 @@ const handleStopRecordingTab = async (request) => {
 };
 
 const handleRestartRecordingTab = async () => {
-    //removeSandbox();
+    // removeSandbox();
 };
 
 const handleDismissRecordingTab = async () => {
@@ -1432,7 +1439,7 @@ const handlePip = async (started = false) => {
 const handleSignOutDrive = async () => {
     // Get token
     const { token } = await chrome.storage.local.get(['token']);
-    var url = 'https://accounts.google.com/o/oauth2/revoke?token=' + token;
+    const url = 'https://accounts.google.com/o/oauth2/revoke?token=' + token;
     fetch(url);
 
     chrome.identity.removeCachedAuthToken({ token: token });
@@ -1479,6 +1486,7 @@ const checkAvailableMemory = (sendResponse) => {
 };
 
 // Listen for messages
+// eslint-disable-next-line complexity
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'desktop-capture') {
         desktopCapture(request);
@@ -1503,7 +1511,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.type === 'restarted') {
         restartActiveTab();
     } else if (request.type === 'new-chunk') {
-        newChunk(request);
+        newChunk(request, sendResponse);
         return true;
     } else if (request.type === 'get-streaming-data') {
         handleGetStreamingData();
@@ -1673,14 +1681,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
         try {
             // 先打开所有的Tab, 避免录屏的时候，需要等待网页打开或加载
-            for await (let config of configs) {
+            for await (const config of configs) {
                 const { url, inx } = config;
                 // 查询拥有reeval标志的url是否打开
                 const tabs = await chrome.tabs.query({ url });
                 let tab = tabs?.[0];
                 // 若标签未打开，则创建Tab
                 if (!tabs?.length) {
-                    const start = +new Date();
+                    const start = Number(new Date());
                     tab = await chrome.tabs.create({ url, active: false });
                     // 等待页面加载结束
                     loaded.push(
@@ -1704,7 +1712,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             // 等待准备
             await sleep(2000);
 
-            for await (let config of configs) {
+            for await (const config of configs) {
                 const { url } = config;
                 const tabId = tabMap.get(url);
                 // 激活Tab
@@ -1718,6 +1726,93 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         } catch (e) {
             console.error(e);
         }
+    }
+
+    if (type === 'reeval-storyboard') {
+        const { storyboard } = options;
+        const { sections } = storyboard;
+        // 新建一个 window
+        // const wind = await createWindow(chrome.windows.WindowState.FULLSCREEN);
+        const win = await createWindow(chrome.windows.WindowState.FULLSCREEN);
+        // 删除浏览器默认页面
+        const tempLoaded = [];
+        for await (const [inx, config] of Object.entries(sections)) {
+            const url = config?.screen_recording?.url;
+            config.inx = inx;
+
+            // 片头没有url
+            if (url) {
+                const url$ = getReEvalURL(url, inx);
+                // 创建 Tab, 默认激活第一个tab
+                const tab = await chrome.tabs.create({ url: url$, active: !inx, windowId: win.id });
+                // Tab信息写入sections
+                config.tabId = tab.id;
+                config.url = url$;
+                // 等待页面加载结束
+                tempLoaded.push(
+                    new Promise((resolve) => {
+                        // 监听页面加载状态
+                        chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+                            if (info.status === 'complete' && tabId === tab.id) {
+                                chrome.tabs.onUpdated.removeListener(listener);
+                                resolve(true);
+                            }
+                        });
+                    })
+                );
+            }
+        }
+
+        // 删除默认Tab
+        tempLoaded.push(removeWindowDefaultTab(win.id));
+
+        // 等待所有Tab加载完成
+        await Promise.all(tempLoaded);
+
+        // 当前活动 active tab
+        const activeTab = await getCurrentTab({ windowId: win.id });
+        console.log(activeTab);
+        // 当前activeTab
+        await chrome.storage.local.set({ activeTab: activeTab.id });
+        await chrome.tabs.sendMessage(activeTab.id, { type: 'reeval-start-recording', options });
+    }
+
+    if (type === 'reeval-run-storyboard') {
+        try {
+            console.log('reeval-run-storyboard -->> ', options);
+            // 等待倒计时3s
+            await sleep(3000);
+            const sections = options?.storyboard?.sections ?? [];
+            for await (const config of sections) {
+                const { tabId, inx, screen_recording: record } = config;
+                if (tabId) {
+                    // 激活tab
+                    await chrome.tabs.update(tabId, { highlighted: true });
+                    // 传递信息，通知runtime执行高亮文本
+                    await chrome.tabs.sendMessage(tabId, { type: 'run-reeval', options: record });
+                    // 等待时间
+                    const duration = record?.duration ?? 5000;
+                    console.log(inx, '--->>>', record?.duration);
+                    await sleep(duration);
+                    // 取消激活tab
+                    await chrome.tabs.update(tabId, { highlighted: false });
+                }
+            }
+
+            // 停止录屏
+            await chrome.runtime.sendMessage({ type: 'stop-recording-tab' });
+            // 退出全屏
+            const { id: windowId } = await chrome.windows.getCurrent();
+            await chrome.windows.update(windowId, { state: chrome.windows.WindowState.MAXIMIZED });
+        } catch (e) {
+            console.log('reeval-run-storyboard', e);
+        }
+    }
+
+    if (type === 'reeval-start-recording-test') {
+        const tab = await getCurrentTab();
+        // await chrome.tabs.sendMessage(tab.id, { type: 'reeval-start-recording' });
+        await chrome.tabs.sendMessage(tab.id, { type: 'toggle-popup' });
     }
 });
 

@@ -1,0 +1,29 @@
+{
+    "extends": ["alloy", "alloy/react"],
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
+    },
+    "env": {
+        "browser": true,
+        "es2022": true
+    },
+    "globals": {
+        "window": false,
+        "chrome": false
+    },
+    "rules": {
+        "prefer-const": "error",
+        "no-invalid-this": "off",
+        "no-unused-vars": "off",
+        "max-nested-callbacks": ["error", 5],
+        "max-params": ["error", 5],
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "jsx-no-new-function-as-prop": "off",
+        "react/jsx-curly-brace-presence": "off",
+        "react/jsx-no-useless-fragment": "off"
+    }
+}
