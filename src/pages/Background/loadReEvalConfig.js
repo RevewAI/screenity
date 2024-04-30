@@ -69,8 +69,8 @@ export function isElementVisible(element) {
  * @returns
  */
 export function contains(selector, text, precision) {
-    var elements = typeof selector === 'string' ? document.querySelectorAll(selector) : selector;
-    return [].filter.call(elements, function (element) {
+    const elements = typeof selector === 'string' ? document.querySelectorAll(selector) : selector;
+    return [].filter.call(elements, (element) => {
         const textNode = element.childNodes[0];
         const isIgnore = !['SCRIPT', 'HTML'].includes(element.nodeName);
         const isVisible = isElementVisible(element);
@@ -96,6 +96,7 @@ export function fuzzyContains(text) {
     if (rst.length) return [rst, reg, 0];
     if (typeof text === 'string') {
         // text = text.split('').filter(Boolean).map((char) => `${char}\n*`).join('');
+        // eslint-disable-next-line no-param-reassign
         text = text.replace(/\s+/g, '\n*');
         reg = RegExp(`(${text})`);
         rst = contains(selector, reg, 1);
@@ -211,7 +212,7 @@ export async function autoScrollByScreenity(options) {
         return;
     }
 
-    const start = +new Date();
+    const start = Number(new Date());
     do {
         console.log(`------------------${inx}-----------------------------`);
         const { target, source_content = '', position = 0, time_start, time_end } = setting[inx];

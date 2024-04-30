@@ -580,7 +580,7 @@ const Recorder = () => {
                             type: 'reeval-run-storyboard',
                             options: data?.ReEvalProductionOption
                         });
-                        chrome.storage.local.remove('ReEvalProductionOption');
+                        // chrome.storage.local.remove('ReEvalProductionOption');
                         startStream(data, streamId, options, permissions, permissions2);
                     }
                 });

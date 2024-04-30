@@ -1,33 +1,10 @@
-import React, { Fragment, Suspense, useEffect, useState, useRef, useMemo } from 'react';
-import { Modal, Form, Space, Button, Input, Spin, Tabs, List, Select, message } from 'antd';
-import {
-    MinusCircleOutlined,
-    ArrowUpOutlined,
-    ArrowDownOutlined,
-    PlusCircleOutlined,
-    EyeOutlined,
-    EditOutlined,
-    VideoCameraAddOutlined,
-    ProductOutlined,
-    DeleteOutlined,
-    PlayCircleOutlined
-} from '@ant-design/icons';
-import {
-    baseAjax,
-    baseStore,
-    pagesStore,
-    useAjax,
-    pageStore,
-    storyStore,
-    productionStore,
-    useProduceProduction,
-    videoTemplatesStore,
-    base
-} from './store';
-import { useRecoilRefresher_UNSTABLE, useRecoilValueLoadable, useSetRecoilState, useRecoilValue, useRecoilState } from 'recoil';
+import React, { Fragment, Suspense, useEffect, useState } from 'react';
+import { Modal, Form, Button, Input, Spin, List, Select, message, Popconfirm } from 'antd';
+import { EditOutlined, VideoCameraAddOutlined, ProductOutlined, DeleteOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { baseAjax, baseStore, useAjax, productionStore, useProduceProduction, base } from './store';
+import { useRecoilRefresher_UNSTABLE, useRecoilValue, useRecoilState } from 'recoil';
 import { isEmpty } from 'lodash-es';
-import Plyr, { usePlyr } from 'plyr-react';
-import ReactPlayer from 'react-player';
+import Plyr from 'plyr-react';
 import '../Sandbox/styles/plyr.css';
 
 export const templatesStore = baseAjax({ url: '/video_templates' });
@@ -157,6 +134,7 @@ export const ProductionItem = (props) => {
         created: {},
         creating_storyboard: { recording: true },
         processed: { recording: true },
+        processing: { recording: true },
         recorded: { recording: true, producing: true },
         producing: { recording: true, producing: true },
         success: { recording: true, producing: true, play: true }
@@ -183,7 +161,18 @@ export const ProductionItem = (props) => {
             }}
             actions={[
                 <EditOutlined key={'edit'} onClick={() => setId(item.id)} />,
-                <DeleteOutlined key={'delete'} onClick={() => handleRemove(item)} />,
+                <Popconfirm
+                    key={'delete'}
+                    title="确认"
+                    description="确认删除?"
+                    onConfirm={() => {
+                        handleRemove(item);
+                    }}
+                    okText="Yes"
+                    cancelText="No"
+                >
+                    <DeleteOutlined />
+                </Popconfirm>,
                 <Fragment key={'recording'}>{action.recording ? <VideoCameraAddOutlined onClick={() => camera(item)} /> : null}</Fragment>,
                 <Fragment key={'producing'}>
                     {action.producing ? (

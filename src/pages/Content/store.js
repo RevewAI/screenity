@@ -24,7 +24,7 @@ export const instance = axios.create({
     baseURL: 'https://knitter.ai/videomaker'
 });
 
-instance.interceptors.response.use(function (response) {
+instance.interceptors.response.use((response) => {
     const { data } = response;
     return data;
 });

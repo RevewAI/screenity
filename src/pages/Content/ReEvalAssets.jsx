@@ -34,6 +34,7 @@ export const AssetItem = (props) => {
             <img alt="example" src={`${base}/download/asset/${item.id}`} />
         ) : (
             <Plyr
+                crossOrigin="anonymous"
                 source={{
                     type: 'video',
                     title: `${item?.asset_name}`,

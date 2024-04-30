@@ -9,6 +9,9 @@ import localforage from 'localforage';
 import { sleep, runReEval, timeDiff } from './loadReEvalConfig';
 import { createWindow, removeWindowDefaultTab } from './bus';
 
+import './action';
+import './context-menu';
+
 localforage.config({
     driver: localforage.INDEXEDDB,
     name: 'screenity',
@@ -30,7 +33,7 @@ const startAfterCountdown = async () => {
     const { recordingTab } = await chrome.storage.local.get(['recordingTab']);
     const { offscreen } = await chrome.storage.local.get(['offscreen']);
 
-    if (recordingTab != null || offscreen) {
+    if (recordingTab !== null || offscreen) {
         chrome.storage.local.set({ recording: true });
         startRecording();
     }
@@ -527,60 +530,61 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 // Check when action button is clicked
-chrome.action.onClicked.addListener(async (tab) => {
-    console.log('action', tab);
+// 修改点击 action 的动作为打开 reevalapp by mizi
+// chrome.action.onClicked.addListener(async (tab) => {
+//     console.log('action', tab);
 
-    // Check if recording
-    const { recording } = await chrome.storage.local.get(['recording']);
-    if (recording) {
-        stopRecording();
-        sendMessageRecord({ type: 'stop-recording-tab' });
-        const { activeTab } = await chrome.storage.local.get(['activeTab']);
+//     // Check if recording
+//     const { recording } = await chrome.storage.local.get(['recording']);
+//     if (recording) {
+//         stopRecording();
+//         sendMessageRecord({ type: 'stop-recording-tab' });
+//         const { activeTab } = await chrome.storage.local.get(['activeTab']);
 
-        // Check if actual tab
-        chrome.tabs.get(activeTab, (t) => {
-            if (t) {
-                sendMessageTab(activeTab, { type: 'stop-recording-tab' });
-            } else {
-                sendMessageTab(tab.id, { type: 'stop-recording-tab' });
-                chrome.storage.local.set({ activeTab: tab.id });
-            }
-        });
-    } else {
-        // Check if it's possible to inject into content (not a chrome:// page, new tab, etc)
-        if (
-            !(
-                (navigator.onLine === false && !tab.url.includes('/playground.html') && !tab.url.includes('/setup.html')) ||
-                tab.url.startsWith('chrome://') ||
-                (tab.url.startsWith('chrome-extension://') && !tab.url.includes('/playground.html') && !tab.url.includes('/setup.html'))
-            ) &&
-            !tab.url.includes('stackoverflow.com/') &&
-            !tab.url.includes('chrome.google.com/webstore') &&
-            !tab.url.includes('chromewebstore.google.com')
-        ) {
-            sendMessageTab(tab.id, { type: 'toggle-popup' });
-            chrome.storage.local.set({ activeTab: tab.id });
-        } else {
-            chrome.tabs
-                .create({
-                    url: 'playground.html',
-                    active: true
-                })
-                .then((tab) => {
-                    chrome.storage.local.set({ activeTab: tab.id });
-                });
-        }
-    }
+//         // Check if actual tab
+//         chrome.tabs.get(activeTab, (t) => {
+//             if (t) {
+//                 sendMessageTab(activeTab, { type: 'stop-recording-tab' });
+//             } else {
+//                 sendMessageTab(tab.id, { type: 'stop-recording-tab' });
+//                 chrome.storage.local.set({ activeTab: tab.id });
+//             }
+//         });
+//     } else {
+//         // Check if it's possible to inject into content (not a chrome:// page, new tab, etc)
+//         if (
+//             !(
+//                 (navigator.onLine === false && !tab.url.includes('/playground.html') && !tab.url.includes('/setup.html')) ||
+//                 tab.url.startsWith('chrome://') ||
+//                 (tab.url.startsWith('chrome-extension://') && !tab.url.includes('/playground.html') && !tab.url.includes('/setup.html'))
+//             ) &&
+//             !tab.url.includes('stackoverflow.com/') &&
+//             !tab.url.includes('chrome.google.com/webstore') &&
+//             !tab.url.includes('chromewebstore.google.com')
+//         ) {
+//             sendMessageTab(tab.id, { type: 'toggle-popup' });
+//             chrome.storage.local.set({ activeTab: tab.id });
+//         } else {
+//             chrome.tabs
+//                 .create({
+//                     url: 'playground.html',
+//                     active: true
+//                 })
+//                 .then((tab) => {
+//                     chrome.storage.local.set({ activeTab: tab.id });
+//                 });
+//         }
+//     }
 
-    const { firstTime } = await chrome.storage.local.get(['firstTime']);
+//     const { firstTime } = await chrome.storage.local.get(['firstTime']);
 
-    if (firstTime && tab.url.includes(chrome.runtime.getURL('setup.html'))) {
-        chrome.storage.local.set({ firstTime: false });
-        // Send message to active tab
-        const activeTab = await getCurrentTab();
-        sendMessageTab(activeTab.id, { type: 'setup-complete' });
-    }
-});
+//     if (firstTime && tab.url.includes(chrome.runtime.getURL('setup.html'))) {
+//         chrome.storage.local.set({ firstTime: false });
+//         // Send message to active tab
+//         const activeTab = await getCurrentTab();
+//         sendMessageTab(activeTab.id, { type: 'setup-complete' });
+//     }
+// });
 
 const restartActiveTab = async () => {
     const activeTab = await getCurrentTab();
@@ -1803,6 +1807,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             await chrome.runtime.sendMessage({ type: 'stop-recording-tab' });
             // 退出全屏
             const { id: windowId } = await chrome.windows.getCurrent();
+            await chrome.windows.update(windowId, { state: chrome.windows.WindowState.MINIMIZED });
             await chrome.windows.update(windowId, { state: chrome.windows.WindowState.MAXIMIZED });
         } catch (e) {
             console.log('reeval-run-storyboard', e);

@@ -1,15 +1,13 @@
-import React, { Suspense, useEffect, useState, useContext } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 
 // Components
 import Wrapper from './Wrapper';
-import { Button, message } from 'antd';
+import { message } from 'antd';
 
 // Context
 import ContentState from './context/ContentState';
 import { cleanReEvalURL } from '../Background/loadReEvalConfig';
-import { ReEvalURLsModal } from './ReEvalURLsModal';
-import axios from 'axios';
-import { Store, baseAjax, pagesStore, usePostPages, baseStore } from './store';
+import { Store, pagesStore, usePostPages, baseStore } from './store';
 import $ from 'jquery';
 import { useRecoilRefresher_UNSTABLE, useRecoilValueLoadable, useRecoilValue, useRecoilState, useSetRecoilState } from 'recoil';
 import { ReEvalModal } from './ReEvalModal';
@@ -43,16 +41,10 @@ const ReEvalBtn = () => {
         }
     };
 
-    const start = async () => {
-        console.log(111);
-        await chrome.runtime.sendMessage({ type: 'reeval-start-recording-test' });
-    };
-
     return (
         <>
             {exist ? (
-                <section className="reeval-ball reeval-ball-added" onClick={start}>
-                    {/* <section className="reeval-ball reeval-ball-added" onClick={() => setOpenModal(true)}> */}
+                <section className="reeval-ball reeval-ball-added" onClick={() => setOpenModal(true)}>
                     ReEval Added
                 </section>
             ) : (
@@ -69,11 +61,7 @@ const Content = () => {
     const [count, setCount] = useState(0);
     const [openModal, setOpenModal] = useRecoilState(baseStore(Store.OPEN_PAGES_MODAL));
     const { contents: pages } = useRecoilValueLoadable(pagesStore);
-
-    const test = () => {
-        console.log('send stop-recording-tab');
-        chrome.runtime.sendMessage({ type: 'stop-recording-tab' });
-    };
+    const [reevalMark, setReEvalMark] = useState();
 
     useEffect(() => {
         chrome.storage.local.get([storageKey]).then(({ [storageKey]: urls }) => {
@@ -88,22 +76,18 @@ const Content = () => {
         });
     }, []);
 
+    useEffect(() => {
+        const usp = new URLSearchParams(window.location.search);
+        const reeval = usp.get('reeval');
+        setReEvalMark(reeval);
+    }, []);
+
     return (
         <div className="screenity-shadow-dom">
             <ContentState>
                 <Wrapper />
                 <ReEvalRecord />
             </ContentState>
-
-            <Suspense fallback={<></>}>
-                <ReEvalBtn />
-            </Suspense>
-
-            <section className="reeval-urls-count" onClick={() => setOpenModal(true)}>
-                {/* <section className="reeval-urls-count" onClick={test}> */}
-                {/* {count} */}
-                {pages?.data?.length}
-            </section>
 
             {openModal && <ReEvalModal open={openModal} onCancel={() => setOpenModal(false)} footer={false} />}
 
