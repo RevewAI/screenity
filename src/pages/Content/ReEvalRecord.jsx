@@ -2,20 +2,23 @@ import React, { useEffect, useContext, useState } from 'react';
 import { contentStateContext } from './context/ContentState';
 import { MsgKey, StorageKey } from '../ReEvalApp/Constant';
 import { Button } from 'antd';
-import { PlusOutlined, CheckOutlined } from '@ant-design/icons';
+import { PlusOutlined, CheckOutlined, CodeOutlined } from '@ant-design/icons';
 import styles from './styles.module.scss';
 import { cleanReEvalURL } from '../ReEvalApp/bus';
+import { isNil } from 'lodash-es';
+import { msg } from '../ReEvalApp/utils';
 
 export const ReEvalRecord = () => {
     const [contentState, setContentState] = useContext(contentStateContext);
     const [addReEvalLoading, setAddReEvalLoading] = useState(false);
     const [pageAction, setPageAction] = useState(false);
     const [added, setAdded] = useState(false);
+    const [showPageAction, setShowPageAction] = useState(true);
 
     // Event listener (extension messaging)
-    const messageListener = async (request) => {
+    const messageListener = async (request, sender, sendResponse) => {
         const { type, options } = request;
-        console.log('::->', type);
+        console.log('ooOoo', 'messageListener -> ', type);
         // 发出录屏申请
         if (type === 'reeval-start-recording') {
             const state = {
@@ -44,20 +47,20 @@ export const ReEvalRecord = () => {
         }
 
         if (type === MsgKey.ADD_TO_REEVAL) {
-            // loading 状态
             setAddReEvalLoading(true);
         }
 
         if (type === MsgKey.ADDED_TO_REEVAL) {
-            console.log('::-> 2', type);
-            // susscess
             setAddReEvalLoading(false);
             setAdded(true);
+        }
+
+        if (type === 'stop-recording-tab') {
+            sendResponse({ b: 333333333 });
         }
     };
 
     const storageListener = (changes, areaName) => {
-        console.log('----------->>>', changes, changes[StorageKey.PAGE_ACTION_BAR]);
         if (areaName === 'local' && changes[StorageKey.PAGE_ACTION_BAR]) {
             setPageAction(changes[StorageKey.PAGE_ACTION_BAR]?.newValue);
         }
@@ -75,7 +78,10 @@ export const ReEvalRecord = () => {
     };
 
     useEffect(() => {
-        chrome.runtime.sendMessage({ type: MsgKey.IS_ADDED_REEVAL, options: { added, url: cleanReEvalURL() } });
+        chrome.runtime.sendMessage({
+            type: MsgKey.IS_ADDED_REEVAL,
+            options: { added, url: cleanReEvalURL(window.location.href) }
+        });
     }, [added]);
 
     useEffect(() => {
@@ -94,9 +100,16 @@ export const ReEvalRecord = () => {
             chrome.storage.onChanged.removeListener(storageListener);
         };
     }, []);
+
+    useEffect(() => {
+        const usp = new URLSearchParams(window.location.search);
+        const reeval = usp.get('reeval');
+        setShowPageAction(isNil(reeval));
+    }, []);
+
     return (
         <>
-            {(pageAction || addReEvalLoading) && (
+            {showPageAction && (pageAction || addReEvalLoading) && (
                 <Button
                     type={'primary'}
                     shape={'round'}

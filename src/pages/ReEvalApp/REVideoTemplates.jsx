@@ -1,5 +1,5 @@
 import { Modules } from './Constant';
-import { RECrud, commons } from './RECrud';
+import { RECrud } from './RECrud';
 import { ruyiStore } from './store';
 import React from 'react';
 import { VideoAssets } from './REAssets';

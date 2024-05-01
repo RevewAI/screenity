@@ -1,8 +1,9 @@
 import $ from 'jquery';
 import { delay, maxBy, minBy } from 'lodash-es';
 import dayjs from 'dayjs';
+import { Constants } from '../ReEvalApp/Constant';
 
-const adjustOffestTop = 70;
+const adjustOffestTop = 150;
 
 /**
  * 获取时间 diff
@@ -124,7 +125,6 @@ export function closestContainer(text) {
  * 页面滚动到条件指定位置
  */
 export function scrollContent(text, position) {
-    console.log('ooOoo.0~~>', text, position);
     if (!text) {
         scrollTo(position ?? 0);
         return {};
@@ -273,14 +273,29 @@ export async function loadReEvalConfig(options) {
 //     selector && sourceHTML && $(selector).html(sourceHTML);
 // }
 
+// {
+//     "duration": 7700,
+//     "highlight_keywords": [
+//         "习近平",
+//         "西部地区的发展",
+//         "区域协调发展战略"
+//     ],
+//     "key_point": "Xi Jinping chaired a forum on promoting the development of the western region.",
+//     "original_sentences": [
+//         "2024年4月23日，习近平总书记在重庆主持召开新时代推动西部大开发座谈会。",
+//         "/* 习近平主持召开西部大开发座谈会 */"
+//     ],
+//     "url": "https://baijiahao.baidu.com/s?id=1797202740296425066&wfr=spider&for=pc"
+// }
+
 export async function runReEval(config) {
-    const { screen_recording } = config;
-    console.log(config);
-    const content = screen_recording?.original_sentences?.[0];
+    const { original_sentences } = config;
+    console.log('runReEval ->', config);
+    const [content] = original_sentences;
     // 滚动到脚本文本位置
     const { selector, sourceHTML } = scrollContent(content);
     // 脚本执行等待
-    await sleep(timeDiff(time_end).diff(timeDiff(time_start)));
+    await sleep(config?.duration ?? Constants.DURATION);
     // 删除高亮, 写回源信息
     selector && sourceHTML && $(selector).html(sourceHTML);
 }

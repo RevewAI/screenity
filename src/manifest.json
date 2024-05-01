@@ -43,6 +43,7 @@
                 "playground.html",
                 "editorfallback.html",
                 "download.html",
+                "reevalapp.html",
                 "*"
             ],
             "matches": ["<all_urls>"]

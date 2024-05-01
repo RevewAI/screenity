@@ -45,7 +45,6 @@ msg.on(MsgKey.IS_ADDED_REEVAL, async ({ added, url }) => {
 
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
     const tab = await chrome.tabs.get(tabId);
-    console.log('context-menu tabs.onActivated', tab);
     if (!tab.url) return;
     const url = cleanReEvalURL(tab.url);
     const pages = await local.get(StorageKey.PAGES);

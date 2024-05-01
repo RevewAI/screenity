@@ -1,4 +1,5 @@
-import { Constants, DownloadType } from './Constant';
+import { Constants, DownloadType, MsgKey, StorageKey } from './Constant';
+import { local, msg } from './utils';
 
 /**
  * 生成指定模块和ID的媒体资源源URL
@@ -45,4 +46,12 @@ export function getReEvalIndex(url) {
 export function hasReEvalIndex(url) {
     const entity = new URL(url ?? window.location.href);
     return entity.searchParams.has('reeval');
+}
+
+export async function sendMessageToApp(type, options) {
+    const appTabId = await local.get(StorageKey.APP_TAB_ID);
+    if (appTabId) {
+        const sendMessage = msg.tabSend(appTabId);
+        await sendMessage(type, options);
+    }
 }

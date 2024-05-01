@@ -4,6 +4,8 @@ import { instance } from '../../../Content/store';
 import { ReactSVG } from 'react-svg';
 import { ContentStateContext } from '../../context/ContentState';
 import { Spin, message } from 'antd';
+import { sendMessageToApp } from '../../../ReEvalApp/bus';
+import { MsgKey } from '../../../ReEvalApp/Constant';
 const URL = 'chrome-extension://' + chrome.i18n.getMessage('@@extension_id') + '/assets/';
 export const ReEvalUpload = () => {
     const [contentState, setContentState] = useContext(ContentStateContext);
@@ -28,7 +30,8 @@ export const ReEvalUpload = () => {
                 'Content-Type': 'multipart/form-data'
             }
         });
-        chrome.storage.local.remove('production');
+        // chrome.storage.local.remove('production');
+        sendMessageToApp(MsgKey.APP_RELOAD, Math.random());
         message.success('上传成功');
         setLoading(false);
     };
@@ -49,8 +52,8 @@ export const ReEvalUpload = () => {
                 <ReactSVG src={URL + 'editor/icons/drive.svg'} />
             </div>
             <div className={styles.buttonMiddle}>
-                <div className={styles.buttonTitle}>{loading ? <Spin /> : '上传 '}</div>
-                <div className={styles.buttonDescription}>ReEval</div>
+                <div className={styles.buttonTitle}>{loading ? <Spin /> : '上传视频'}</div>
+                <div className={styles.buttonDescription}>ReEval Productions</div>
             </div>
             <div className={styles.buttonRight}>
                 <ReactSVG src={URL + 'editor/icons/right-arrow.svg'} />

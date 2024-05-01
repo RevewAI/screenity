@@ -1,18 +1,21 @@
-import { Button, Form, Modal, Select, Spin, Tooltip } from 'antd';
+import { Button, Form, Input, Modal, Select, Spin, Tooltip } from 'antd';
 import { Modules } from './Constant';
-import { RECrud, commons } from './RECrud';
+import { RECrud, expandColumns } from './RECrud';
 import { ruyiStore, useRuyi } from './store';
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { PlayCircleOutlined, ProductOutlined, SaveOutlined, VideoCameraAddOutlined, FireOutlined } from '@ant-design/icons';
-import { useRecoilValue, useRecoilValueLoadable } from 'recoil';
+import { useRecoilValue, useRecoilValueLoadable, useRecoilRefresher_UNSTABLE } from 'recoil';
 import { isEmpty } from 'lodash-es';
 import Plyr from 'plyr-react';
 import { getMediaSourceURL } from './bus';
 import { VideoAssets } from './REAssets';
 
+const module = Modules.PRODUCTIONS;
+
 const ProduceAction = ({ record, module }) => {
     const produce = useRuyi(module)('put');
     const [loading, setLoading] = useState(false);
+    const refresh = useRecoilRefresher_UNSTABLE(ruyiStore({ module: module }));
     return (
         <Tooltip title={'合成视频'}>
             {loading ? (
@@ -20,7 +23,10 @@ const ProduceAction = ({ record, module }) => {
             ) : (
                 <FireOutlined
                     onClick={async () => {
+                        setLoading(true);
                         await produce({}, {}, { url: `/productions/${record.id}/produce` });
+                        setLoading(false);
+                        refresh();
                     }}
                 />
             )}
@@ -81,51 +87,9 @@ const VideoClipsByProductionAction = ({ record, module }) => {
     );
 };
 
-const moreActions = (module, record) => {
-    const statusActionMap = {
-        created: {},
-        creating_storyboard: { recording: true },
-        processed: { recording: true },
-        processing: { recording: true },
-        recorded: { recording: true, producing: true },
-        producing: { recording: true, producing: true },
-        success: { recording: true, producing: true, play: true }
-    };
-
-    const action = statusActionMap[record.status] ?? {};
-
-    // 开始录屏
-    const camera = (record) => {
-        if (isEmpty(record?.storyboard)) return;
-        chrome.runtime.sendMessage({ type: 'reeval-storyboard', options: record });
-    };
-
-    return (
-        <>
-            {action.recording && (
-                <Tooltip title="录制视频">
-                    <VideoCameraAddOutlined onClick={() => camera(record)} />
-                </Tooltip>
-            )}
-            {action.producing && <ProduceAction module={module} record={record} />}
-            {action.play && <PlayAction module={module} record={record} />}
-            <VideoClipsByProductionAction module={module} record={record} />
-        </>
-    );
-};
-
-const columns = [
-    { dataIndex: 'voice_over_script', title: 'Voice over script', fixed: 'left', ellipsis: true, width: 420 },
-    { dataIndex: 'id', title: 'ID', width: 240 },
-    { dataIndex: 'story_id', title: 'Story ID', ellipsis: true, width: 240 },
-    { dataIndex: 'template_id', title: 'Template ID', ellipsis: true, width: 240 },
-    { dataIndex: 'voice_name', title: 'Voice name', width: 200 },
-    ...commons(Modules.PRODUCTIONS, moreActions)
-];
-
 const ProductionForm = ({ onCancel }) => {
     const [form] = Form.useForm();
-    const add = useRuyi(Modules.PRODUCTIONS)('add');
+    const add = useRuyi(module)('add');
     const [loading, setLoading] = useState(false);
 
     const { data: videoTemplates = [] } = useRecoilValue(ruyiStore({ module: Modules.VIDEO_TEMPLATES }));
@@ -191,7 +155,7 @@ const ProductionForm = ({ onCancel }) => {
     );
 };
 
-export const AddModal = ({ module, ...rest }) => {
+export const CreateProductionModal = ({ module, ...rest }) => {
     return (
         <Modal title={'Create Production'} width={800} footer={null} {...rest}>
             <Suspense fallback={<Spin />}>
@@ -201,6 +165,135 @@ export const AddModal = ({ module, ...rest }) => {
     );
 };
 
+export const EditProductionForm = ({ id, onCancel }) => {
+    const [form] = Form.useForm();
+    const { contents, state } = useRecoilValueLoadable(ruyiStore({ params: { id }, module }));
+    const [loading, setLoading] = useState(false);
+
+    const update = useRuyi(module)('put');
+
+    const { data: videoTemplates = [] } = useRecoilValue(ruyiStore({ module: Modules.VIDEO_TEMPLATES }));
+    const { data: stories = [] } = useRecoilValue(ruyiStore({ module: Modules.STORIES }));
+    const { data: voices = {} } = useRecoilValue(ruyiStore({ module: Modules.VOICE_NAMES }));
+
+    const storyOptions = stories.map((item) => {
+        return {
+            value: item.id,
+            label: (
+                <section style={{ maxWidth: 480 }}>
+                    <div>{item.title}</div>
+                    <div style={{ fontSize: 12, color: '#777' }}>{item.voice_over_script}</div>
+                </section>
+            )
+        };
+    });
+
+    const videoTemplateOptions = videoTemplates.map((item) => {
+        return {
+            value: item.id,
+            label: (
+                <section style={{ maxWidth: 480 }}>
+                    <div>{item.name}</div>
+                    <div style={{ fontSize: 12, color: '#777' }}>{item.id}</div>
+                </section>
+            )
+        };
+    });
+
+    const voiceOptions = voices.voice_names.map((item) => {
+        return { value: item, label: item };
+    });
+
+    const onFinish = async (values) => {
+        setLoading(true);
+        await update({ id }, values);
+        setLoading(false);
+        onCancel?.();
+        form?.resetFields();
+    };
+
+    useEffect(() => {
+        state === 'hasValue' && form.setFieldsValue(contents?.data);
+    }, [state]);
+
+    return (
+        <Form form={form} onFinish={onFinish} layout={'vertical'} initialValues={{}}>
+            <Form.Item name={'template_id'} label={'Select Video Template'}>
+                <Select placeholder="Select Video Template" options={videoTemplateOptions} style={{ height: 70 }} />
+            </Form.Item>
+
+            <Form.Item name={'voice_name'} label={'Voice Name'}>
+                <Select placeholder="Select Voice" options={voiceOptions} />
+            </Form.Item>
+
+            <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between' }}>
+                <span />
+                <Button type="primary" htmlType="submit" shape={'round'} loading={loading} icon={<SaveOutlined />}>
+                    确定
+                </Button>
+            </div>
+        </Form>
+    );
+};
+
+export const EditProductionModal = ({ record, module, onCancel, ...rest }) => {
+    const { id } = record;
+
+    return (
+        <Modal title={id} open={open} footer={null} width={800} onCancel={onCancel} {...rest}>
+            <Suspense fallback={<Spin />}>
+                <EditProductionForm id={id} onCancel={onCancel} />
+            </Suspense>
+        </Modal>
+    );
+};
+
+const moreActions = (module, record) => {
+    const statusActionMap = {
+        created: {},
+        creating_storyboard: { recording: true },
+        processed: { recording: true },
+        processing: { recording: true },
+        recorded: { recording: true, producing: true },
+        producing: { recording: true, producing: true },
+        success: { recording: true, producing: true, play: true }
+    };
+
+    const action = statusActionMap[record.status] ?? {};
+
+    // 开始录屏
+    const camera = (record) => {
+        if (isEmpty(record?.storyboard)) return;
+        chrome.runtime.sendMessage({ type: 'reeval-storyboard', options: record });
+    };
+
+    return (
+        <>
+            {action.recording && (
+                <Tooltip title="录制视频">
+                    <VideoCameraAddOutlined onClick={() => camera(record)} />
+                </Tooltip>
+            )}
+            {action.producing && <ProduceAction module={module} record={record} />}
+            {action.play && <PlayAction module={module} record={record} />}
+            <VideoClipsByProductionAction module={module} record={record} />
+        </>
+    );
+};
+
+const columns = [
+    { dataIndex: 'voice_over_script', title: 'Voice over script', fixed: 'left', ellipsis: true, width: 420 },
+    { dataIndex: 'id', title: 'ID', width: 240 },
+    { dataIndex: 'story_id', title: 'Story ID', ellipsis: true, width: 240 },
+    { dataIndex: 'template_id', title: 'Template ID', ellipsis: true, width: 240 },
+    { dataIndex: 'voice_name', title: 'Voice name', width: 200 },
+    ...expandColumns(module, moreActions, EditProductionModal, { action: { width: 200 } })
+];
+
 export const REProductions = () => {
-    return <RECrud label={'Productions'} selector={ruyiStore({ module: Modules.PRODUCTIONS })} columns={columns} add={AddModal} />;
+    // 预加载数据，用于编辑/新建
+    useRecoilValueLoadable(ruyiStore({ module: Modules.VIDEO_TEMPLATES }));
+    useRecoilValueLoadable(ruyiStore({ module: Modules.STORIES }));
+    useRecoilValueLoadable(ruyiStore({ module: Modules.VOICE_NAMES }));
+    return <RECrud label={'Productions'} selector={ruyiStore({ module: module })} columns={columns} add={CreateProductionModal} />;
 };

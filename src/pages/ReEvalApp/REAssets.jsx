@@ -1,8 +1,8 @@
 import { groupBy, upperFirst } from 'lodash-es';
-import { Constants, DownloadType, Modules } from './Constant';
-import { DeleteAction, EditAction, RECrud, commons } from './RECrud';
+import { Modules } from './Constant';
+import { DeleteAction, EditAction, RECrud, expandColumns } from './RECrud';
 import { ruyiStore } from './store';
-import React, { Children, useState } from 'react';
+import React, { useState } from 'react';
 import { Card, List, Tabs } from 'antd';
 import Plyr from 'plyr-react';
 import '../Sandbox/styles/plyr.css';
@@ -14,7 +14,7 @@ const columns = [
     { dataIndex: 'id', title: 'ID', width: 260 },
     { dataIndex: 'title', title: 'Title', ellipsis: true },
     { dataIndex: 'url', title: 'URL', ellipsis: true },
-    ...commons(module)
+    ...expandColumns(module)
 ];
 
 const ImageAssets = ({ data, module }) => {

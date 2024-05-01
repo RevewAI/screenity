@@ -29,6 +29,15 @@ export function debounce(func, wait, immediate) {
     };
 }
 
+/**
+ * 延迟
+ */
+export function sleep(delay) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, delay);
+    });
+}
+
 export const local = {
     get: async (key) => {
         const { [key]: value } = await chrome.storage.local.get(key);

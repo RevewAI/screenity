@@ -6,11 +6,9 @@ import localforage from 'localforage';
 
 // const debounce = require('lodash').debounce;
 
-import { sleep, runReEval, timeDiff } from './loadReEvalConfig';
-import { createWindow, removeWindowDefaultTab } from './bus';
-
 import './action';
 import './context-menu';
+import './run-storyboard';
 
 localforage.config({
     driver: localforage.INDEXEDDB,
@@ -167,7 +165,7 @@ chrome.commands.onCommand.addListener(async (command) => {
         // get active tab
         const activeTab = await getCurrentTab();
         sendMessageTab(activeTab.id, { type: 'cancel-recording' });
-    } else if (command == 'pause-recording') {
+    } else if (command === 'pause-recording') {
         const activeTab = await getCurrentTab();
         sendMessageTab(activeTab.id, { type: 'pause-recording' });
     }
@@ -178,6 +176,7 @@ const handleAlarm = async (alarm) => {
         // Check if recording
         const { recording } = await chrome.storage.local.get(['recording']);
         if (recording) {
+            console.log('ooOoo', 2222222);
             stopRecording();
             const { recordingTab } = await chrome.storage.local.get(['recordingTab']);
             sendMessageTab(recordingTab, { type: 'stop-recording-tab' });
@@ -1296,6 +1295,7 @@ const writeFile = async (request) => {
 };
 
 const videoReady = async () => {
+    console.log('ooOoo videoReady', 333333);
     const { backupTab } = await chrome.storage.local.get(['backupTab']);
     if (backupTab) {
         sendMessageTab(backupTab, { type: 'close-writable' });
@@ -1509,6 +1509,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.type === 'start-rec') {
         startRecording();
     } else if (request.type === 'video-ready') {
+        console.log('||ooOoo -> 1111', request?.options);
         videoReady();
     } else if (request.type === 'start-recording') {
         startRecording();
@@ -1663,172 +1664,3 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         addAlarmListener();
     }
 });
-
-function getReEvalURL(url, inx) {
-    const entity = new URL(url);
-    entity.searchParams.set('reeval', inx);
-    return entity.toString();
-}
-
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-    const { type, options } = request;
-
-    if (type === 'reeval') {
-        const tabMap = new Map();
-        const loaded = [];
-        const configs = options.map((config, inx) => {
-            const url = getReEvalURL(config.target, inx);
-            return { ...config, url };
-        });
-
-        await sleep(10000);
-
-        try {
-            // 先打开所有的Tab, 避免录屏的时候，需要等待网页打开或加载
-            for await (const config of configs) {
-                const { url, inx } = config;
-                // 查询拥有reeval标志的url是否打开
-                const tabs = await chrome.tabs.query({ url });
-                let tab = tabs?.[0];
-                // 若标签未打开，则创建Tab
-                if (!tabs?.length) {
-                    const start = Number(new Date());
-                    tab = await chrome.tabs.create({ url, active: false });
-                    // 等待页面加载结束
-                    loaded.push(
-                        new Promise((resolve) => {
-                            chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-                                if (info.status === 'complete' && tabId === tab.id) {
-                                    chrome.tabs.onUpdated.removeListener(listener);
-                                    resolve(true);
-                                }
-                            });
-                        })
-                    );
-                }
-                // 存储tabId
-                tabMap.set(url, tab?.id);
-            }
-
-            // 等待所有Tab加载完成
-            await Promise.all(loaded);
-
-            // 等待准备
-            await sleep(2000);
-
-            for await (const config of configs) {
-                const { url } = config;
-                const tabId = tabMap.get(url);
-                // 激活Tab
-                await chrome.tabs.update(tabId, { highlighted: true });
-                // 传递信息，通知runtime执行高亮文本
-                await chrome.tabs.sendMessage(tabId, { type: 'run-reeval', options: config });
-                // 页面打开等待时间
-                await sleep(timeDiff(config.time_end).diff(timeDiff(config.time_start)));
-                await chrome.tabs.update(tabId, { highlighted: false });
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    if (type === 'reeval-storyboard') {
-        const { storyboard } = options;
-        const { sections } = storyboard;
-        // 新建一个 window
-        // const wind = await createWindow(chrome.windows.WindowState.FULLSCREEN);
-        const win = await createWindow(chrome.windows.WindowState.FULLSCREEN);
-        // 删除浏览器默认页面
-        const tempLoaded = [];
-        for await (const [inx, config] of Object.entries(sections)) {
-            const url = config?.screen_recording?.url;
-            config.inx = inx;
-
-            // 片头没有url
-            if (url) {
-                const url$ = getReEvalURL(url, inx);
-                // 创建 Tab, 默认激活第一个tab
-                const tab = await chrome.tabs.create({ url: url$, active: !inx, windowId: win.id });
-                // Tab信息写入sections
-                config.tabId = tab.id;
-                config.url = url$;
-                // 等待页面加载结束
-                tempLoaded.push(
-                    new Promise((resolve) => {
-                        // 监听页面加载状态
-                        chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-                            if (info.status === 'complete' && tabId === tab.id) {
-                                chrome.tabs.onUpdated.removeListener(listener);
-                                resolve(true);
-                            }
-                        });
-                    })
-                );
-            }
-        }
-
-        // 删除默认Tab
-        tempLoaded.push(removeWindowDefaultTab(win.id));
-
-        // 等待所有Tab加载完成
-        await Promise.all(tempLoaded);
-
-        // 当前活动 active tab
-        const activeTab = await getCurrentTab({ windowId: win.id });
-        console.log(activeTab);
-        // 当前activeTab
-        await chrome.storage.local.set({ activeTab: activeTab.id });
-        await chrome.tabs.sendMessage(activeTab.id, { type: 'reeval-start-recording', options });
-    }
-
-    if (type === 'reeval-run-storyboard') {
-        try {
-            console.log('reeval-run-storyboard -->> ', options);
-            // 等待倒计时3s
-            await sleep(3000);
-            const sections = options?.storyboard?.sections ?? [];
-            for await (const config of sections) {
-                const { tabId, inx, screen_recording: record } = config;
-                if (tabId) {
-                    // 激活tab
-                    await chrome.tabs.update(tabId, { highlighted: true });
-                    // 传递信息，通知runtime执行高亮文本
-                    await chrome.tabs.sendMessage(tabId, { type: 'run-reeval', options: record });
-                    // 等待时间
-                    const duration = record?.duration ?? 5000;
-                    console.log(inx, '--->>>', record?.duration);
-                    await sleep(duration);
-                    // 取消激活tab
-                    await chrome.tabs.update(tabId, { highlighted: false });
-                }
-            }
-
-            // 停止录屏
-            await chrome.runtime.sendMessage({ type: 'stop-recording-tab' });
-            // 退出全屏
-            const { id: windowId } = await chrome.windows.getCurrent();
-            await chrome.windows.update(windowId, { state: chrome.windows.WindowState.MINIMIZED });
-            await chrome.windows.update(windowId, { state: chrome.windows.WindowState.MAXIMIZED });
-        } catch (e) {
-            console.log('reeval-run-storyboard', e);
-        }
-    }
-
-    if (type === 'reeval-start-recording-test') {
-        const tab = await getCurrentTab();
-        // await chrome.tabs.sendMessage(tab.id, { type: 'reeval-start-recording' });
-        await chrome.tabs.sendMessage(tab.id, { type: 'toggle-popup' });
-    }
-});
-
-// console.log('::::--->>>', chrome.tabs);
-// self.addEventListener("message", (event) => {
-//   handleMessage(event.data);
-// });
-
-// tab 激活，向所在的tab发送信息
-// chrome.tabs.onActivated.addListener(async ({ tabId }) => {
-//     const storageKey = 'reeval-urls';
-//     const { [storageKey]: urls = [] } = await chrome.storage.local.get([storageKey]);
-//     await chrome.tabs.sendMessage(tabId, { type: storageKey, urls });
-// });

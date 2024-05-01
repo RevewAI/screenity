@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import localforage from 'localforage';
 
 import Warning from './warning/Warning';
+import { MsgKey } from '../ReEvalApp/Constant';
 
 localforage.config({
     driver: localforage.INDEXEDDB, // or choose another driver
@@ -116,7 +117,7 @@ const Recorder = () => {
             ];
 
             // Check if the browser supports any of the mimeTypes, make sure to select the first one that is supported from the list
-            let mimeType = mimeTypes.find((mimeType) => MediaRecorder.isTypeSupported(mimeType));
+            const mimeType = mimeTypes.find((mimeType) => MediaRecorder.isTypeSupported(mimeType));
 
             // If no mimeType is supported, throw an error
             if (!mimeType) {
@@ -165,6 +166,7 @@ const Recorder = () => {
             if (isRestarting.current) return;
             setTimeout(() => {
                 if (!sentLast.current) {
+                    console.log('ooOoo stop', 444444);
                     chrome.runtime.sendMessage({ type: 'video-ready' });
                     isFinishing.current = false;
                 }
@@ -248,7 +250,9 @@ const Recorder = () => {
 
             if (isFinishing.current) {
                 sentLast.current = true;
-                chrome.runtime.sendMessage({ type: 'video-ready' });
+                console.log('ooOoo isFinishing.current', 5555555555);
+                await chrome.runtime.sendMessage({ type: 'video-ready', options: 'ssss' });
+                console.log('-------------------------------------');
             }
         };
 
@@ -283,21 +287,21 @@ const Recorder = () => {
         }
 
         if (liveStream.current !== null) {
-            liveStream.current.getTracks().forEach(function (track) {
+            liveStream.current.getTracks().forEach((track) => {
                 track.stop();
             });
             liveStream.current = null;
         }
 
         if (helperVideoStream.current !== null) {
-            helperVideoStream.current.getTracks().forEach(function (track) {
+            helperVideoStream.current.getTracks().forEach((track) => {
                 track.stop();
             });
             helperVideoStream.current = null;
         }
 
         if (helperAudioStream.current !== null) {
-            helperAudioStream.current.getTracks().forEach(function (track) {
+            helperAudioStream.current.getTracks().forEach((track) => {
                 track.stop();
             });
             helperAudioStream.current = null;
@@ -367,6 +371,7 @@ const Recorder = () => {
     }
 
     const setMic = async (result) => {
+        // eslint-disable-next-line no-eq-null, eqeqeq
         if (helperAudioStream.current != null) {
             if (result.active) {
                 setAudioInputVolume(1);
@@ -378,6 +383,7 @@ const Recorder = () => {
         }
     };
 
+    // eslint-disable-next-line complexity
     async function startStream(data, id, options, permissions, permissions2) {
         // Get quality value
         const { qualityValue } = await chrome.storage.local.get(['qualityValue']);
@@ -406,7 +412,7 @@ const Recorder = () => {
         }
 
         const { fpsValue } = await chrome.storage.local.get(['fpsValue']);
-        let fps = parseInt(fpsValue);
+        let fps = parseInt(fpsValue, 10);
 
         // Check if fps is a number
         if (isNaN(fps)) {
@@ -414,7 +420,7 @@ const Recorder = () => {
         }
 
         // Check if the user selected a tab in desktopcapture
-        let userConstraints = {
+        const userConstraints = {
             audio: {
                 deviceId: data.defaultAudioInput
             },
@@ -439,7 +445,7 @@ const Recorder = () => {
         }
 
         let userStream;
-        if (permissions.state != 'denied' && permissions2.state != 'denied' && data.recordingType === 'camera') {
+        if (permissions.state !== 'denied' && permissions2.state !== 'denied' && data.recordingType === 'camera') {
             userStream = await navigator.mediaDevices.getUserMedia(userConstraints);
         }
 
@@ -510,6 +516,7 @@ const Recorder = () => {
         helperAudioStream.current = micstream;
 
         // Check if micstream has an audio track
+        // eslint-disable-next-line no-eq-null, eqeqeq
         if (helperAudioStream.current != null && helperAudioStream.current.getAudioTracks().length > 0) {
             audioInputGain.current = aCtx.current.createGain();
             audioInputSource.current = aCtx.current.createMediaStreamSource(helperAudioStream.current);
@@ -518,6 +525,7 @@ const Recorder = () => {
             // No microphone available
         }
 
+        // eslint-disable-next-line no-eq-null, eqeqeq
         if (helperAudioStream.current != null && !data.micActive) {
             setAudioInputVolume(0);
         }
@@ -534,6 +542,7 @@ const Recorder = () => {
         // Add the tracks to the stream
         liveStream.current.addTrack(helperVideoStream.current.getVideoTracks()[0]);
         if (
+            // eslint-disable-next-line no-eq-null, eqeqeq
             (helperAudioStream.current != null && helperAudioStream.current.getAudioTracks().length > 0) ||
             helperVideoStream.current.getAudioTracks().length > 0
         ) {
@@ -564,12 +573,16 @@ const Recorder = () => {
                     captureTypes = ['tab', 'screen', 'window', 'audio'];
                 }
 
-                chrome.desktopCapture.chooseDesktopMedia(captureTypes, null, (streamId, options) => {
+                const id = chrome.desktopCapture.chooseDesktopMedia(captureTypes, null, (streamId, options) => {
                     if (streamId === undefined || streamId === null || streamId === '') {
                         chrome.runtime.sendMessage({
                             type: 'recording-error',
                             error: 'cancel-modal',
                             why: 'User cancelled the modal'
+                        });
+
+                        chrome.runtime.sendMessage({
+                            type: MsgKey.CANCEL_RECORDING
                         });
                         return;
                     } else {
@@ -668,7 +681,7 @@ const Recorder = () => {
                     {!started ? chrome.i18n.getMessage('recorderSelectTitle') : chrome.i18n.getMessage('recorderSelectProgressTitle')}
                 </div>
                 <div className="subtitle">{chrome.i18n.getMessage('recorderSelectDescription')}</div>
-                {/*started && (
+                {/* started && (
           <div
             className="button-stop"
             onClick={() => {
@@ -677,10 +690,10 @@ const Recorder = () => {
           >
             {chrome.i18n.getMessage("stopRecording")}
           </div>
-					)*/}
+					) */}
             </div>
             {!isTab.current && !started && <Warning />}
-            <div className="setupBackgroundSVG"></div>
+            <div className="setupBackgroundSVG" />
             <style>
                 {`
 				body {

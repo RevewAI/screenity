@@ -39,7 +39,8 @@ export const Constants = {
     PRIMARY_COLOR: '#45b7f7',
     RESOURCE_BASE: 'https://knitter.ai/videomaker',
     NOT_ADDED_REEVAL_COLOR: '#1677ff',
-    ADDED_REEVAL_COLOR: '#f66b11'
+    ADDED_REEVAL_COLOR: '#f66b11',
+    DURATION: 5000
 };
 
 export const MenuContext = {
@@ -52,7 +53,9 @@ export const StorageKey = {
     // page action bar
     PAGE_ACTION_BAR: 'reeval.storage.page.action.bar',
     // app tabId
-    APP_TAB_ID: 'reeval.storage.app.tab.id'
+    APP_TAB_ID: 'reeval.storage.app.tab.id',
+    // 中断录屏
+    INTERRUPT_RECORDING: 'reeval.storage.recording.interrupt'
 };
 
 export const MsgKey = {
@@ -63,5 +66,8 @@ export const MsgKey = {
     ADDED_TO_REEVAL: 'reeval.msg.added.to.reeval',
     IS_ADDED_REEVAL: 'reeval.msg.is.added',
     // APP 数据重新加载
-    APP_RELOAD: 'reeval.msg.app.reload'
+    APP_RELOAD: 'reeval.msg.app.reload',
+    // 取消录屏
+    CANCEL_RECORDING: 'reeval.msg.cancel.recording',
+    INTERRUPT_RECORDING: 'reeval.msg.interrupt.recording'
 };

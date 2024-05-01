@@ -21,7 +21,9 @@ const sendMessageTab = async (tabId, message, responseCallback = null, noTab = n
             tab.url === '' ||
             tab.url === 'about:blank'
         ) {
-            return Promise.reject(new Error('Invalid tab URL'));
+            // 注释掉错误提示 by mizi
+            // return Promise.reject(new Error('Invalid tab URL'));
+            return;
         }
 
         return new Promise((resolve, reject) => {

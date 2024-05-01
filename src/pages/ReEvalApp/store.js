@@ -32,7 +32,7 @@ export const ruyiStore = selectorFamily({
             if (module && !url) {
                 const uri = Resources[module];
                 const { id, ...params$ } = params;
-                options.url = ['get', 'delete'].includes(method) ? (id ? `${uri}/${id}` : uri) : uri;
+                options.url = ['get', 'delete', 'put'].includes(method) ? (id ? `${uri}/${id}` : uri) : uri;
                 options.method = method;
                 options.params = params$;
             }
@@ -62,7 +62,10 @@ export const useRuyi = (module) => {
             },
             put: async (params, data, config) => {
                 console.log('useRuyi->', params, data, config);
-                await snapshot.getPromise(ruyiStore({ module, params, data, method: 'put', ...config }));
+                const method = 'put';
+                await snapshot.getPromise(ruyiStore({ module, params, data, method, ...config }));
+                refresh(ruyiStore({ module }));
+                refresh(ruyiStore({ module, params }));
                 message.success('更新成功');
             },
             add: async (data) => {

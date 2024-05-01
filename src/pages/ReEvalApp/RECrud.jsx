@@ -1,22 +1,26 @@
-import { Table, Button, Space, Popconfirm, Modal, Input, message, Upload, Spin } from 'antd';
+import { Table, Button, Space, Popconfirm, Modal, Input, message, Upload, Spin, Form, Tooltip } from 'antd';
 import { useRecoilRefresher_UNSTABLE, useRecoilValueLoadable } from 'recoil';
-import React, { useState } from 'react';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, ProfileOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { ruyiStore, useRuyi } from './store';
 import { Constants } from './Constant';
+import { useForm } from 'antd/es/form/Form';
+import { mapValues } from 'lodash-es';
 
 export const DeleteAction = ({ record }) => {
     const { id, module } = record;
     const remove = useRuyi(module)('remove');
     return (
         <Popconfirm title={'? 确认'} description={'请确认删除'} onConfirm={async () => await remove({ id })} style={{ width: 120 }}>
-            <DeleteOutlined />
+            <Tooltip title={'删除'}>
+                <DeleteOutlined />
+            </Tooltip>
         </Popconfirm>
     );
 };
 
-export const EditModal = ({ record, ...rest }) => {
+export const DetailModal = ({ record, ...rest }) => {
     const { id, module } = record;
     const { contents } = useRecoilValueLoadable(ruyiStore({ params: { id }, module }));
     return (
@@ -26,12 +30,26 @@ export const EditModal = ({ record, ...rest }) => {
     );
 };
 
-export const EditAction = ({ record, module }) => {
+export const DetailAction = ({ record, module }) => {
     const [open, setOpen] = useState(false);
     return (
         <>
-            <EditOutlined onClick={() => setOpen(!open)} />
-            {open && <EditModal open={open} record={record} module={module} onCancel={() => setOpen(false)} />}
+            <Tooltip title={'详情'}>
+                <ProfileOutlined onClick={() => setOpen(!open)} />
+            </Tooltip>
+            {open && <DetailModal open={open} record={record} module={module} onCancel={() => setOpen(false)} />}
+        </>
+    );
+};
+
+export const EditAction = ({ record, module, modal: Modal }) => {
+    const [open, setOpen] = useState(false);
+    return (
+        <>
+            <Tooltip title={'编辑'}>
+                <EditOutlined onClick={() => setOpen(!open)} />
+            </Tooltip>
+            {open && <Modal open={open} record={record} module={module} onCancel={() => setOpen(false)} />}
         </>
     );
 };
@@ -68,7 +86,7 @@ export const AssetUpload = ({ module, selector }) => {
     );
 };
 
-export const commons = (module, moreActions) => {
+export const expandColumns = (module, moreActions, modal, setting = {}) => {
     return [
         { dataIndex: 'status', title: 'Status', width: 110 },
         {
@@ -83,19 +101,25 @@ export const commons = (module, moreActions) => {
         {
             dataIndex: 'action',
             title: 'Action',
-            width: 160,
+            width: 100,
             fixed: 'right',
             render: (text, record) => {
                 return (
                     <Space size={8}>
-                        <EditAction record={record} module={module} />
+                        <DetailAction record={record} module={module} />
+                        {!!modal && <EditAction record={record} module={module} modal={modal} />}
                         <DeleteAction record={record} module={module} />
-                        {moreActions?.(module, record) ?? moreActions}
+                        {moreActions?.(module, record)}
                     </Space>
                 );
             }
         }
-    ];
+    ].map((item) => {
+        const option = setting?.[item.dataIndex] ?? {};
+        return mapValues(item, (value, key) => {
+            return option?.[key] ?? value;
+        });
+    });
 };
 
 export const RECrud = ({ module, label, selector, columns = [], add, add: AddModal, upload, listRender }) => {

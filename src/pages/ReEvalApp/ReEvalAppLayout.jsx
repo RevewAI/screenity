@@ -15,7 +15,8 @@ import {
 import styles from './styles.module.scss';
 import { useSetRecoilState } from 'recoil';
 import { reloadAtom } from './store';
-import { StorageKey } from './Constant';
+import { MsgKey, StorageKey } from './Constant';
+import { local } from './utils';
 const items = [
     { label: 'Pages', key: '/pages', icon: <BarsOutlined /> },
     { label: 'Stories', key: '/stories', icon: <HighlightOutlined /> },
@@ -39,10 +40,30 @@ export const ReEvalAppLayout = () => {
         await chrome.storage.local.set({ [StorageKey.PAGE_ACTION_BAR]: checked });
     };
 
+    const messageListener = (request) => {
+        const { type, options } = request;
+        if (type === MsgKey.APP_RELOAD) {
+            setReload(options);
+        }
+    };
+
+    /**
+     * 控制页面上的工具显示
+     */
     useEffect(() => {
-        chrome.storage.local.get(StorageKey.PAGE_ACTION_BAR).then(({ [StorageKey.PAGE_ACTION_BAR]: checked }) => {
+        local.get(StorageKey.PAGE_ACTION_BAR).then((checked) => {
             setOpenAction(checked);
         });
+    }, []);
+
+    /**
+     * 外部操作数据变化，引起页面重新加载
+     */
+    useEffect(() => {
+        chrome.runtime.onMessage.addListener(messageListener);
+        return () => {
+            chrome.runtime.onMessage.removeListener(messageListener);
+        };
     }, []);
 
     return (

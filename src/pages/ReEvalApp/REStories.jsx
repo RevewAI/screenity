@@ -1,26 +1,19 @@
 import { Button, Form, Input, Modal, Select, Space } from 'antd';
 import { Modules } from './Constant';
-import { RECrud, commons } from './RECrud';
+import { RECrud, expandColumns } from './RECrud';
 import { ruyiStore, useRuyi } from './store';
 import React, { useEffect, useState } from 'react';
 import { ArrowDownOutlined, ArrowUpOutlined, MinusCircleOutlined, PlusCircleOutlined, SaveOutlined } from '@ant-design/icons';
 import { useRecoilValueLoadable } from 'recoil';
 
-const columns = [
-    { dataIndex: 'id', title: 'ID', width: 260 },
-    { dataIndex: 'title', title: 'Title', ellipsis: true },
-    { dataIndex: 'guidance', title: 'Guidance', ellipsis: true },
-    { dataIndex: 'language', title: 'Language', width: 100 },
-    ...commons(Modules.STORIES)
-];
-
-const StoryForm = ({ onCancel }) => {
+const module = Modules.STORIES;
+const CreateStoryForm = ({ onCancel }) => {
     const [form] = Form.useForm();
-    const { contents } = useRecoilValueLoadable(ruyiStore({ module: Modules.PAGES }));
-    const add = useRuyi(Modules.STORIES)('add');
+    const { contents: pages } = useRecoilValueLoadable(ruyiStore({ module: Modules.PAGES }));
+    const add = useRuyi(module)('add');
     const [loading, setLoading] = useState(false);
 
-    const pageOptions = contents?.data?.map?.((item) => {
+    const pageOptions = pages?.data?.map?.((item) => {
         return {
             value: item.id,
             label: (
@@ -147,11 +140,64 @@ const StoryForm = ({ onCancel }) => {
 export const AddModal = ({ module, ...rest }) => {
     return (
         <Modal title={'Create Story'} width={800} footer={null} {...rest}>
-            <StoryForm module={module} onCancel={rest?.onCancel} />
+            <CreateStoryForm module={module} onCancel={rest?.onCancel} />
         </Modal>
     );
 };
 
+export const EditStoryForm = ({ id, onCancel }) => {
+    const [form] = Form.useForm();
+    const { contents, state } = useRecoilValueLoadable(ruyiStore({ params: { id }, module }));
+    const [loading, setLoading] = useState(false);
+
+    const update = useRuyi(module)('put');
+
+    const onFinish = async (values) => {
+        setLoading(true);
+        await update({ id }, values);
+        setLoading(false);
+        onCancel?.();
+        form?.resetFields();
+    };
+
+    useEffect(() => {
+        state === 'hasValue' && form.setFieldsValue(contents?.data);
+    }, [state]);
+
+    return (
+        <Form form={form} onFinish={onFinish} layout={'vertical'} initialValues={{}}>
+            <Form.Item name={'voice_over_script'} label={'Voice over script'}>
+                <Input.TextArea placeholder="title" autoSize={{ minRows: 5 }} />
+            </Form.Item>
+
+            <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between' }}>
+                <span />
+                <Button type="primary" htmlType="submit" shape={'round'} loading={loading} icon={<SaveOutlined />}>
+                    确定
+                </Button>
+            </div>
+        </Form>
+    );
+};
+
+export const EditModal = ({ record, module, onCancel, ...rest }) => {
+    const { id, title } = record;
+
+    return (
+        <Modal title={title} open={open} footer={null} width={800} onCancel={onCancel} {...rest}>
+            <EditStoryForm id={id} onCancel={onCancel} />
+        </Modal>
+    );
+};
+
+const columns = [
+    { dataIndex: 'id', title: 'ID', width: 260 },
+    { dataIndex: 'title', title: 'Title', ellipsis: true },
+    { dataIndex: 'guidance', title: 'Guidance', ellipsis: true },
+    { dataIndex: 'language', title: 'Language', width: 100 },
+    ...expandColumns(module, null, EditModal)
+];
+
 export const REStories = () => {
-    return <RECrud label={'Stories'} selector={ruyiStore({ module: Modules.STORIES })} columns={columns} add={AddModal} />;
+    return <RECrud label={'Stories'} selector={ruyiStore({ module: module })} columns={columns} add={AddModal} />;
 };
