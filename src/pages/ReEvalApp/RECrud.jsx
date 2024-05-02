@@ -7,6 +7,8 @@ import { ruyiStore, useRuyi } from './store';
 import { Constants } from './Constant';
 import { useForm } from 'antd/es/form/Form';
 import { mapValues } from 'lodash-es';
+import { DownloadOutlined } from '@ant-design/icons';
+import { dateFormat, getMediaSourceURL } from './bus';
 
 export const DeleteAction = ({ record }) => {
     const { id, module } = record;
@@ -54,6 +56,28 @@ export const EditAction = ({ record, module, modal: Modal }) => {
     );
 };
 
+export const DownloadAction = ({ record, module, onCancel, ...rest }) => {
+    const { id } = record;
+    const [loading, setLoading] = useState(false);
+
+    const download = async () => {
+        setLoading(true);
+        await chrome.downloads.download({
+            url: getMediaSourceURL(module, id),
+            filename: `${id}.mp4`
+        });
+        setLoading(false);
+    };
+
+    return loading ? (
+        <Spin size={'small'} />
+    ) : (
+        <Tooltip title={'下载'}>
+            <DownloadOutlined id={id} onClick={download} />
+        </Tooltip>
+    );
+};
+
 export const AssetUpload = ({ module, selector }) => {
     const refresh = useRecoilRefresher_UNSTABLE(selector);
     const [loading, setLoading] = useState(false);
@@ -94,10 +118,9 @@ export const expandColumns = (module, moreActions, modal, setting = {}) => {
             title: 'Create Date',
             width: 150,
             sorter: (a, b) => dayjs(a.created_at) - dayjs(b.created_at),
-            render: (text) => {
-                return dayjs(text).format('YYYY-MM-DD');
-            }
+            render: dateFormat()
         },
+
         {
             dataIndex: 'action',
             title: 'Action',
@@ -114,12 +137,16 @@ export const expandColumns = (module, moreActions, modal, setting = {}) => {
                 );
             }
         }
-    ].map((item) => {
-        const option = setting?.[item.dataIndex] ?? {};
-        return mapValues(item, (value, key) => {
-            return option?.[key] ?? value;
-        });
-    });
+    ]
+        .map((item) => {
+            const option = setting?.[item.dataIndex] ?? {};
+            return option
+                ? mapValues(item, (value, key) => {
+                      return option?.[key] ?? value;
+                  })
+                : null;
+        })
+        .filter(Boolean);
 };
 
 export const RECrud = ({ module, label, selector, columns = [], add, add: AddModal, upload, listRender }) => {
@@ -139,7 +166,7 @@ export const RECrud = ({ module, label, selector, columns = [], add, add: AddMod
                 {!!upload && <AssetUpload module={module} selector={selector} />}
             </div>
             {listRender ? (
-                listRender(contents?.data)
+                listRender(contents?.data, state === 'loading')
             ) : (
                 <Table
                     loading={state === 'loading'}

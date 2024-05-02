@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { Constants, DownloadType, MsgKey, StorageKey } from './Constant';
 import { local, msg } from './utils';
 
@@ -54,4 +55,14 @@ export async function sendMessageToApp(type, options) {
         const sendMessage = msg.tabSend(appTabId);
         await sendMessage(type, options);
     }
+}
+
+export function dateFormat(format) {
+    return (text, record) => {
+        try {
+            return dayjs(text).format(format ?? 'YYYY-MM-DD');
+        } catch (e) {
+            return '';
+        }
+    };
 }

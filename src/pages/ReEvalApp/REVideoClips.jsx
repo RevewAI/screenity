@@ -6,8 +6,8 @@ import { VideoAssets } from './REAssets';
 
 const module = Modules.VIDEO_CLIPS;
 export const ReVideoClips = () => {
-    const render = (data) => {
-        return data?.length ? <VideoAssets data={data} module={module} /> : <></>;
+    const render = (data, loading) => {
+        return <VideoAssets data={data} module={module} loading={loading} />;
     };
     return <RECrud label={'Video Clips'} selector={ruyiStore({ module })} add={false} listRender={render} />;
 };

@@ -5,10 +5,11 @@ import { ruyiStore, useRuyi } from './store';
 import React, { Suspense, useEffect, useState } from 'react';
 import { PlayCircleOutlined, ProductOutlined, SaveOutlined, VideoCameraAddOutlined, FireOutlined } from '@ant-design/icons';
 import { useRecoilValue, useRecoilValueLoadable, useRecoilRefresher_UNSTABLE } from 'recoil';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, size } from 'lodash-es';
 import Plyr from 'plyr-react';
 import { getMediaSourceURL } from './bus';
 import { VideoAssets } from './REAssets';
+import { DownloadAction } from './RECrud';
 
 const module = Modules.PRODUCTIONS;
 
@@ -250,13 +251,22 @@ export const EditProductionModal = ({ record, module, onCancel, ...rest }) => {
 
 const moreActions = (module, record) => {
     const statusActionMap = {
+        // 新建
         created: {},
+        // 创建storyboard
         creating_storyboard: { recording: true },
+        // 等待录屏
         processed: { recording: true },
+        // 某些情况会出现错误的状态
         processing: { recording: true },
+        // 视频已录制, 等待手动点击合成
         recorded: { recording: true, producing: true },
+        // 正在合成视频
         producing: { recording: true, producing: true },
-        success: { recording: true, producing: true, play: true }
+        // 视频合成成功
+        success: { recording: true, producing: true, play: true, download: true },
+        // 失败
+        failed: {}
     };
 
     const action = statusActionMap[record.status] ?? {};
@@ -276,7 +286,9 @@ const moreActions = (module, record) => {
             )}
             {action.producing && <ProduceAction module={module} record={record} />}
             {action.play && <PlayAction module={module} record={record} />}
-            <VideoClipsByProductionAction module={module} record={record} />
+            {action.download && <DownloadAction module={module} record={record} />}
+            {/* 关联视频只要有就显示，无需状态判断，因为可以重复录屏和合成 */}
+            {<VideoClipsByProductionAction module={module} record={record} />}
         </>
     );
 };

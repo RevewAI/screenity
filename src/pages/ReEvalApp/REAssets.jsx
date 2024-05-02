@@ -1,12 +1,14 @@
 import { groupBy, upperFirst } from 'lodash-es';
 import { Modules } from './Constant';
-import { DeleteAction, EditAction, RECrud, expandColumns } from './RECrud';
+import { DeleteAction, DetailAction, EditAction, RECrud, expandColumns } from './RECrud';
 import { ruyiStore } from './store';
 import React, { useState } from 'react';
 import { Card, List, Tabs } from 'antd';
 import Plyr from 'plyr-react';
 import '../Sandbox/styles/plyr.css';
 import { getMediaSourceURL } from './bus';
+import { DownloadAction } from './RECrud';
+import dayjs from 'dayjs';
 
 const module = Modules.ASSETS;
 
@@ -41,11 +43,12 @@ const ImageAssets = ({ data, module }) => {
     );
 };
 
-export const VideoAssets = ({ data, module }) => {
+export const VideoAssets = ({ data = [], module, loading }) => {
     return (
         <List
             grid={{ gutter: 8, column: 3 }}
             dataSource={data}
+            loading={loading}
             renderItem={(item) => {
                 return (
                     <List.Item>
@@ -61,11 +64,20 @@ export const VideoAssets = ({ data, module }) => {
                                 />
                             }
                             actions={[
-                                <EditAction key={'edit'} record={item} module={module} />,
-                                <DeleteAction key={'delete'} record={item} module={module} />
+                                <DetailAction key={'edit'} record={item} module={module} />,
+                                <DeleteAction key={'delete'} record={item} module={module} />,
+                                <DownloadAction key={'download'} record={item} module={module} />
                             ]}
                         >
-                            <Card.Meta title={item.file_name} description={item.id} />
+                            <Card.Meta
+                                title={item.name}
+                                description={
+                                    <>
+                                        <div>Production: {item.production_id}</div>
+                                        <div>{dayjs(item.created_at).format('YYYY-MM-DD')}</div>
+                                    </>
+                                }
+                            />
                         </Card>
                     </List.Item>
                 );
@@ -74,11 +86,12 @@ export const VideoAssets = ({ data, module }) => {
     );
 };
 
-export const VoiceAssets = ({ data, module }) => {
+export const VoiceAssets = ({ data, module, loading }) => {
     return (
         <List
             grid={{ gutter: 8, column: 3 }}
             dataSource={data}
+            loading={loading}
             renderItem={(item) => {
                 return (
                     <List.Item>
@@ -95,7 +108,8 @@ export const VoiceAssets = ({ data, module }) => {
                             }
                             actions={[
                                 <EditAction key={'edit'} record={item} module={module} />,
-                                <DeleteAction key={'delete'} record={item} module={module} />
+                                <DeleteAction key={'delete'} record={item} module={module} />,
+                                <DownloadAction key={'download'} record={item} module={module} />
                             ]}
                         >
                             <Card.Meta title={item.file_name} description={item.id} />

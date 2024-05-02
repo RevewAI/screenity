@@ -7,8 +7,8 @@ import { VoiceAssets } from './REAssets';
 const module = Modules.VOICE_CLIPS;
 
 export const ReVoiceClips = () => {
-    const render = (data) => {
-        return data?.length ? <VoiceAssets data={data} module={module} /> : <></>;
+    const render = (data, loading) => {
+        return <VoiceAssets data={data} module={module} loading={loading} />;
     };
     return <RECrud label={'Voice Clips'} selector={ruyiStore({ module })} add={false} listRender={render} />;
 };
