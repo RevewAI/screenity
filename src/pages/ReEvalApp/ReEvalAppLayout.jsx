@@ -10,7 +10,9 @@ import {
     VideoCameraOutlined,
     AppstoreOutlined,
     AudioOutlined,
-    ReloadOutlined
+    ReloadOutlined,
+    FontSizeOutlined,
+    SoundOutlined
 } from '@ant-design/icons';
 import styles from './styles.module.scss';
 import { useSetRecoilState } from 'recoil';

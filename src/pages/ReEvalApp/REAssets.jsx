@@ -2,8 +2,8 @@ import { groupBy, upperFirst } from 'lodash-es';
 import { Modules } from './Constant';
 import { DeleteAction, DetailAction, EditAction, RECrud, expandColumns } from './RECrud';
 import { ruyiStore } from './store';
-import React, { useState } from 'react';
-import { Card, List, Tabs } from 'antd';
+import React, { Suspense, useState } from 'react';
+import { Card, List, Spin, Tabs } from 'antd';
 import Plyr from 'plyr-react';
 import '../Sandbox/styles/plyr.css';
 import { getMediaSourceURL } from './bus';
@@ -19,18 +19,19 @@ const columns = [
     ...expandColumns(module)
 ];
 
-const ImageAssets = ({ data, module }) => {
+const ImageAssets = ({ data, module, loading }) => {
     return (
         <List
             grid={{ gutter: 8, column: 4 }}
             dataSource={data}
+            loading={loading}
             renderItem={(item) => {
                 return (
                     <List.Item>
                         <Card
                             cover={<img alt={item.id} crossOrigin="anonymous" src={getMediaSourceURL(module, item.id)} />}
                             actions={[
-                                <EditAction key={'edit'} record={item} module={module} />,
+                                <DetailAction key={'edit'} record={item} module={module} />,
                                 <DeleteAction key={'delete'} record={item} module={module} />
                             ]}
                         >
@@ -107,7 +108,7 @@ export const VoiceAssets = ({ data, module, loading }) => {
                                 />
                             }
                             actions={[
-                                <EditAction key={'edit'} record={item} module={module} />,
+                                <DetailAction key={'edit'} record={item} module={module} />,
                                 <DeleteAction key={'delete'} record={item} module={module} />,
                                 <DownloadAction key={'download'} record={item} module={module} />
                             ]}
@@ -129,7 +130,7 @@ export const VoiceAssets = ({ data, module, loading }) => {
 //     return <div>Voice Names</div>;
 // };
 
-const Assets = ({ data, module }) => {
+const Assets = ({ data = [], module, loading }) => {
     const group = groupBy(
         data.map((item) => {
             item.type = item.content_type.split('/')[0];
@@ -143,11 +144,11 @@ const Assets = ({ data, module }) => {
             label: upperFirst(item),
             children:
                 item === 'image' ? (
-                    <ImageAssets data={group[item]} module={module} />
+                    <ImageAssets data={group[item]} module={module} loading={loading} />
                 ) : item === 'video' ? (
-                    <VideoAssets data={group[item]} module={module} />
+                    <VideoAssets data={group[item]} module={module} loading={loading} />
                 ) : (
-                    <VoiceAssets data={group[item]} module={module} />
+                    <VoiceAssets data={group[item]} module={module} loading={loading} />
                 )
         };
     });
@@ -166,9 +167,17 @@ const Assets = ({ data, module }) => {
     return <Tabs items={tabs} activeKey={activeKey} onChange={setActiveKey} />;
 };
 
+const Loading = () => {
+    return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 150 }}>
+            <Spin />
+        </div>
+    );
+};
+
 export const REAssets = () => {
-    const render = (data) => {
-        return data?.length ? <Assets data={data} module={module} /> : <></>;
+    const render = (data, loading) => {
+        return loading ? <Loading /> : <Assets data={data} module={module} loading={loading} />;
     };
     return <RECrud label={'Assets'} selector={ruyiStore({ module })} columns={columns} add={false} upload={true} listRender={render} />;
 };

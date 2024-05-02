@@ -6,7 +6,7 @@ import { VoiceAssets } from './REAssets';
 
 const module = Modules.VOICE_CLIPS;
 
-export const ReVoiceClips = () => {
+export const REVoiceClips = () => {
     const render = (data, loading) => {
         return <VoiceAssets data={data} module={module} loading={loading} />;
     };

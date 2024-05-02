@@ -3,9 +3,9 @@ import { REAssets } from './REAssets';
 import { REPages } from './REPages';
 import { REProductions } from './REProductions';
 import { REStories } from './REStories';
-import { ReVideoClips } from './REVideoClips';
-import { ReVideoTemplates } from './REVideoTemplates';
-import { ReVoiceClips } from './REVoiceClips';
+import { REVideoClips } from './REVideoClips';
+import { REVideoTemplates } from './REVideoTemplates';
+import { REVoiceClips } from './REVoiceClips';
 import { ReEvalAppLayout } from './ReEvalAppLayout';
 import React from 'react';
 
@@ -19,9 +19,9 @@ export const routes = [
             { path: '/stories', element: <REStories /> },
             { path: '/productions', element: <REProductions /> },
             { path: '/assets', element: <REAssets /> },
-            { path: '/clips/video', element: <ReVideoClips /> },
-            { path: '/clips/voice', element: <ReVoiceClips /> },
-            { path: '/templates/video', element: <ReVideoTemplates /> }
+            { path: '/clips/video', element: <REVideoClips /> },
+            { path: '/clips/voice', element: <REVoiceClips /> },
+            { path: '/templates/video', element: <REVideoTemplates /> }
         ]
     }
 ];

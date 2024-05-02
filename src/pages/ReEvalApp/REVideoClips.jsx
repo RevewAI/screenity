@@ -5,7 +5,7 @@ import React from 'react';
 import { VideoAssets } from './REAssets';
 
 const module = Modules.VIDEO_CLIPS;
-export const ReVideoClips = () => {
+export const REVideoClips = () => {
     const render = (data, loading) => {
         return <VideoAssets data={data} module={module} loading={loading} />;
     };

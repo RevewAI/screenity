@@ -77,7 +77,7 @@ const EditVideoTemplateModal = ({ module, record, ...rest }) => {
     );
 };
 
-export const ReVideoTemplates = () => {
+export const REVideoTemplates = () => {
     const columns = [
         { dataIndex: 'id', title: 'ID', width: 240 },
         { dataIndex: 'name', title: 'Name', ellipsis: true, width: 240 },
