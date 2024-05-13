@@ -1,3 +1,5 @@
+import { sleep } from '../ReEvalApp/utils';
+
 /**
  * 创建窗口
  */
@@ -18,11 +20,15 @@ export async function createWindow(state = chrome.windows.WindowState.NORMAL) {
  * 删除窗口默认的tab或插件指定的默认tab
  */
 export async function removeWindowDefaultTab(windowId) {
+    await sleep(300);
     const tabs = await chrome.tabs.query({ windowId });
     const tabs$ = tabs.filter(({ url, pendingUrl }) => {
         return ['', 'chrome://newtab/', 'chrome://newtab'].includes(url || pendingUrl);
     });
     for await (const tab of tabs$) {
-        await chrome.tabs.remove(tab.id);
+        const { id: tabId } = (await chrome.tabs.get(tab.id)) ?? {};
+        if (tabId) {
+            await chrome.tabs.remove(tabId);
+        }
     }
 }

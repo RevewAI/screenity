@@ -25,7 +25,7 @@ render(
 // 执行高亮文本
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     const { type, options } = request;
-    if (type === 'run-reeval') {
+    if (type === MsgKey.REEVAL_RUN_SECTION) {
         await runReEval(options);
     }
 

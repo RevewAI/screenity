@@ -26,14 +26,45 @@ export async function addToReEval(tab) {
     }
 }
 
-/**
- * 在右键菜单中添加项 Add to ReEval
- */
-chrome.contextMenus.create({
-    id: MenuContext.ADD,
-    title: 'Add to ReEval',
-    contexts: ['all'],
-    documentUrlPatterns: ['http://*/*', 'https://*/*']
+chrome.runtime.onInstalled.addListener(async () => {
+    const a = await chrome.storage.local.get(null);
+    console.log('----o> all local storage ', a);
+
+    // @todo by mizi
+    chrome.storage.onChanged.addListener(async (changes) => {
+        console.log('storage change', JSON.parse(JSON.stringify(changes)));
+        const a = await chrome.storage.local.get(null);
+        console.log('------------->><>o change result', JSON.parse(JSON.stringify(a)));
+    });
+
+    // await chrome.storage.local.set({
+    //     cameraActive: false,
+    //     askMicrophone: false,
+    //     micActive: false,
+    //     countdown: true,
+    //     microphonePermission: false,
+    //     cameraPermission: false,
+    //     askForPermissions: false,
+    //     firstTime: true,
+    //     // 隐藏工具条
+    //     hideToolbar: true,
+    //     // 是否显示UI，工具框
+    //     hideUI: true,
+    //     showExtension: false
+    //     // 是否显示UI提示框
+    //     // hideUIAlerts: false,
+    //     // toolbarHover: false
+    // });
+
+    /**
+     * 在右键菜单中添加项 Add to ReEval
+     */
+    chrome.contextMenus.create({
+        id: MenuContext.ADD,
+        title: 'Add to ReEval',
+        contexts: ['all'],
+        documentUrlPatterns: ['http://*/*', 'https://*/*']
+    });
 });
 
 msg.on(MsgKey.IS_ADDED_REEVAL, async ({ added, url }) => {

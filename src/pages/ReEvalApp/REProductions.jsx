@@ -13,6 +13,23 @@ import { DownloadAction } from './RECrud';
 
 const module = Modules.PRODUCTIONS;
 
+/**
+ * 权限请求
+ */
+async function startAudioStream() {
+    try {
+        const audioStreamOptions = {
+            // mimeType: 'video/webm;codecs=vp8,opus',
+            audio: true,
+            video: true
+        };
+        await navigator.mediaDevices.getUserMedia(audioStreamOptions);
+    } catch (e) {}
+}
+
+/**
+ * 合成视频
+ */
 const ProduceAction = ({ record, module }) => {
     const produce = useRuyi(module)('put');
     const [loading, setLoading] = useState(false);
@@ -51,6 +68,9 @@ const PlayModal = (props) => {
     );
 };
 
+/**
+ * 播放视频
+ */
 const PlayAction = ({ record, module }) => {
     const [open, setOpen] = useState(false);
     return (
@@ -272,8 +292,10 @@ const moreActions = (module, record) => {
     const action = statusActionMap[record.status] ?? {};
 
     // 开始录屏
-    const camera = (record) => {
+    const camera = async (record) => {
         if (isEmpty(record?.storyboard)) return;
+        await startAudioStream();
+        console.log('startAudioStream...');
         chrome.runtime.sendMessage({ type: 'reeval-storyboard', options: record });
     };
 

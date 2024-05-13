@@ -2,11 +2,12 @@ import React, { useEffect, useContext, useState } from 'react';
 import { contentStateContext } from './context/ContentState';
 import { MsgKey, StorageKey } from '../ReEvalApp/Constant';
 import { Button } from 'antd';
-import { PlusOutlined, CheckOutlined, CodeOutlined } from '@ant-design/icons';
+import { PlusOutlined, CheckOutlined } from '@ant-design/icons';
 import styles from './styles.module.scss';
 import { cleanReEvalURL } from '../ReEvalApp/bus';
 import { isNil } from 'lodash-es';
-import { msg } from '../ReEvalApp/utils';
+import dayjs from 'dayjs';
+import { compareState, plainJSONParse } from '../ReEvalApp/utils';
 
 export const ReEvalRecord = () => {
     const [contentState, setContentState] = useContext(contentStateContext);
@@ -14,35 +15,24 @@ export const ReEvalRecord = () => {
     const [pageAction, setPageAction] = useState(false);
     const [added, setAdded] = useState(false);
     const [showPageAction, setShowPageAction] = useState(true);
+    const [penddingScreen, setPenddingScreen] = useState({ pending: false, total: 1, loaded: 0 });
 
     // Event listener (extension messaging)
     const messageListener = async (request, sender, sendResponse) => {
         const { type, options } = request;
-        console.log('ooOoo', 'messageListener -> ', type);
-        // 发出录屏申请
-        if (type === 'reeval-start-recording') {
-            const state = {
-                recording: true,
-                // 倒计时
-                countdown: true,
-                // 录制类型
-                // screen: 屏幕区域
-                // region: 标签区域
-                // camera: 摄像头
-                // mock: 模拟(移动端)
-                recordingType: 'screen',
-                // 设置区域
-                customRegion: false,
-                // 关闭麦克风
-                microphonePermission: false,
-                askMicrophone: false,
-                // 关闭摄像头
-                cameraPermission: false
-            };
-            setContentState((prevState) => {
-                return { ...prevState, ...state };
+        console.log('ooOoo', `messageListener -> ${dayjs().format('HH:mm:ss.SSS')}`, type, await compareState(contentState));
+
+        if (type === MsgKey.REEVAL_PENDDING_STATE) {
+            setContentState((prevContentState) => {
+                return {
+                    ...prevContentState,
+                    ...options
+                };
             });
-            await chrome.storage.local.set({ ReEvalProductionOption: options });
+        }
+
+        // 发出录屏申请
+        if (type === MsgKey.REEVAL_PENDDING_STORYBOARD) {
             await contentState.startStreaming();
         }
 
@@ -53,10 +43,6 @@ export const ReEvalRecord = () => {
         if (type === MsgKey.ADDED_TO_REEVAL) {
             setAddReEvalLoading(false);
             setAdded(true);
-        }
-
-        if (type === 'stop-recording-tab') {
-            sendResponse({ b: 333333333 });
         }
     };
 
@@ -69,6 +55,11 @@ export const ReEvalRecord = () => {
             const pages = changes[StorageKey.PAGES]?.newValue ?? [];
             const isAdded = pages.includes(cleanReEvalURL(window.location.href));
             setAdded(isAdded);
+        }
+
+        if (areaName === 'local' && changes[StorageKey.PENDDING_SCREEN]) {
+            const pendding = changes[StorageKey.PENDDING_SCREEN]?.newValue ?? [];
+            setPenddingScreen(pendding);
         }
     };
 
@@ -88,13 +79,18 @@ export const ReEvalRecord = () => {
         console.log('runtime storage');
         chrome.runtime.onMessage.addListener(messageListener);
         chrome.storage.onChanged.addListener(storageListener);
-        chrome.storage.local
-            .get([StorageKey.PAGE_ACTION_BAR, StorageKey.PAGES])
-            .then(({ [StorageKey.PAGE_ACTION_BAR]: checked, [StorageKey.PAGES]: pages = [] }) => {
-                const isAdded = pages.includes(cleanReEvalURL(window.location.href));
-                setAdded(isAdded);
-                setPageAction(checked);
-            });
+        chrome.storage.local.get([StorageKey.PAGE_ACTION_BAR, StorageKey.PAGES, StorageKey.PENDDING_SCREEN]).then((changes) => {
+            console.log('oooooo-> changes', changes);
+            const {
+                [StorageKey.PAGE_ACTION_BAR]: checked,
+                [StorageKey.PAGES]: pages = [],
+                [StorageKey.PENDDING_SCREEN]: pending = {}
+            } = changes;
+            const isAdded = pages.includes(cleanReEvalURL(window.location.href));
+            setAdded(isAdded);
+            setPageAction(checked);
+            setPenddingScreen(pending);
+        });
         return () => {
             chrome.runtime.onMessage.removeListener(messageListener);
             chrome.storage.onChanged.removeListener(storageListener);
@@ -107,8 +103,34 @@ export const ReEvalRecord = () => {
         setShowPageAction(isNil(reeval));
     }, []);
 
+    console.log(contentState);
+
+    useEffect(() => {
+        console.log('wapper', plainJSONParse(contentState));
+    }, [contentState]);
+
     return (
         <>
+            {penddingScreen?.run && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 32,
+                        right: 32,
+                        pointerEvents: 'none',
+                        zIndex: 9999999999,
+                        padding: 24,
+                        borderRadius: 48,
+                        background: '#fff',
+                        filter: 'drop-shadow(0px 4px 100px rgba(0, 0, 0, 0.35))'
+                    }}
+                >
+                    <span>正在加载StoryBoard相关页面，请等待...</span>
+                    <span style={{ fontSize: 16, marginLeft: 8, fontWeight: 500 }}>
+                        {penddingScreen.loaded} / {penddingScreen.total}
+                    </span>
+                </div>
+            )}
             {showPageAction && (pageAction || addReEvalLoading) && (
                 <Button
                     type={'primary'}

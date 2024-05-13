@@ -74,3 +74,31 @@ export const msg = {
         return (type, options) => chrome.tabs.sendMessage(tabId, { type, options });
     }
 };
+
+export function stringifyWithCircular(obj) {
+    const seen = new WeakSet();
+
+    return JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+            if (seen.has(value)) {
+                return '[Circular]'; // 或者其他标记值
+            } else {
+                seen.add(value);
+            }
+        }
+        return value;
+    });
+}
+
+export function plainJSONParse(obj) {
+    return JSON.parse(stringifyWithCircular(obj));
+}
+
+export async function compareState(state = {}) {
+    const storage = await chrome.storage.local.get(null);
+    const entites = Object.entries(storage).map(([key, value]) => {
+        return [key, [value, state[key]]];
+    });
+    const compare = Object.fromEntries(entites);
+    return { storage: plainJSONParse(storage), compare };
+}

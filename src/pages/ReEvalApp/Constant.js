@@ -55,7 +55,11 @@ export const StorageKey = {
     // app tabId
     APP_TAB_ID: 'reeval.storage.app.tab.id',
     // 中断录屏
-    INTERRUPT_RECORDING: 'reeval.storage.recording.interrupt'
+    INTERRUPT_RECORDING: 'reeval.storage.recording.interrupt',
+    // 等待录屏
+    PENDDING_SCREEN: 'reeval.storage.recording.screen.pendding',
+    REEVAL_STATE: 'reeval.recording.state',
+    REEVAL_WINDOW_ID: 'reeval.recording.windowId'
 };
 
 export const MsgKey = {
@@ -69,5 +73,14 @@ export const MsgKey = {
     APP_RELOAD: 'reeval.msg.app.reload',
     // 取消录屏
     CANCEL_RECORDING: 'reeval.msg.cancel.recording',
-    INTERRUPT_RECORDING: 'reeval.msg.interrupt.recording'
+    INTERRUPT_RECORDING: 'reeval.msg.interrupt.recording',
+
+    // 状态
+    REEVAL_PENDDING_STATE: 'reeval.storyboard.pendding.state',
+    // 加载页面
+    REEVAL_PENDDING_STORYBOARD: 'reeval.storyboard.pendding.recording',
+    // 运行录屏脚本
+    REEVAL_RUN_STORYBOARD: 'reeval.storyboard.run.recoding',
+    // 运行场景
+    REEVAL_RUN_SECTION: 'reeval.storyboard.recoding.section'
 };

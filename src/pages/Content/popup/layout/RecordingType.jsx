@@ -11,6 +11,7 @@ import BackgroundEffects from '../components/BackgroundEffects';
 
 import { AlertIcon, TimeIcon, NoInternet } from '../../toolbar/components/SVG';
 import { useSetRecoilState } from 'recoil';
+import { compareState } from '../../../ReEvalApp/utils';
 // import { reevalAtom } from '../../store';
 
 const RecordingType = (props) => {
@@ -28,28 +29,6 @@ const RecordingType = (props) => {
     const buttonRef = useRef(null);
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
-    /**
-     * ReEval
-     */
-    const getReevalScript = async () => {
-        const url = window.location.href;
-        const title = document.title;
-        // await fetch(url)
-        //     .then((response) => {
-        //         if (response.ok) {
-        //             return response.text();
-        //         }
-        //         throw new Error('Network response was not ok.');
-        //     })
-        //     .then((html) => {
-        //         setReEval({
-        //             url,
-        //             title,
-        //             content: html
-        //         });
-        //     });
-    };
-
     useEffect(() => {
         const locale = chrome.i18n.getMessage('@@ui_locale');
         if (!locale.includes('en')) {
@@ -64,7 +43,7 @@ const RecordingType = (props) => {
 
     useEffect(() => {
         // Convert seconds to mm:ss
-        let minutes = Math.floor(contentState.alarmTime / 60);
+        const minutes = Math.floor(contentState.alarmTime / 60);
         let seconds = contentState.alarmTime - minutes * 60;
         if (seconds < 10) {
             seconds = '0' + seconds;
@@ -74,7 +53,7 @@ const RecordingType = (props) => {
 
     useEffect(() => {
         // Convert seconds to mm:ss
-        let minutes = Math.floor(contentState.alarmTime / 60);
+        const minutes = Math.floor(contentState.alarmTime / 60);
         let seconds = contentState.alarmTime - minutes * 60;
         if (seconds < 10) {
             seconds = '0' + seconds;
@@ -83,7 +62,8 @@ const RecordingType = (props) => {
     }, [contentState.alarmTime]);
 
     // Start recording
-    const startStreaming = () => {
+    const startStreaming = async () => {
+        console.log('startStreaming --o>', await compareState(contentState));
         contentState.startStreaming();
     };
 
@@ -127,22 +107,22 @@ const RecordingType = (props) => {
                     </div>
                 </div>
             )}
-            {/*contentState.offline && (
-        <div className="popup-warning">
-          <div className="popup-warning-left">
-            <NoInternet />
-          </div>
-          <div className="popup-warning-middle">
-            <div className="popup-warning-title">You are currently offline</div>
-            <div className="popup-warning-description">
-              Some features are unavailable
-            </div>
-          </div>
-          <div className="popup-warning-right">
-            <a href="#">Try again</a>
-          </div>
-        </div>
-			)*/}
+            {/* contentState.offline && (
+                    <div className="popup-warning">
+                    <div className="popup-warning-left">
+                        <NoInternet />
+                    </div>
+                    <div className="popup-warning-middle">
+                        <div className="popup-warning-title">You are currently offline</div>
+                        <div className="popup-warning-description">
+                        Some features are unavailable
+                        </div>
+                    </div>
+                    <div className="popup-warning-right">
+                        <a href="#">Try again</a>
+                    </div>
+                    </div>
+			) */}
             {!cropActive && contentState.recordingType === 'region' && !contentState.offline && (
                 <div className="popup-warning">
                     <div className="popup-warning-left">
@@ -189,7 +169,7 @@ const RecordingType = (props) => {
                 </button>
             )}
             {contentState.cameraPermission && <Dropdown type="camera" shadowRef={props.shadowRef} />}
-            {contentState.cameraPermission && contentState.defaultVideoInput != 'none' && contentState.cameraActive && (
+            {contentState.cameraPermission && contentState.defaultVideoInput !== 'none' && contentState.cameraActive && (
                 <div>
                     <Switch label={chrome.i18n.getMessage('flipCameraLabel')} name="flip-camera" value="cameraFlipped" />
                     <Switch
@@ -231,7 +211,7 @@ const RecordingType = (props) => {
                 </button>
             )}
             {contentState.microphonePermission && <Dropdown type="mic" shadowRef={props.shadowRef} />}
-            {((contentState.microphonePermission && contentState.defaultAudioInput != 'none' && contentState.micActive) ||
+            {((contentState.microphonePermission && contentState.defaultAudioInput !== 'none' && contentState.micActive) ||
                 (contentState.microphonePermission && contentState.pushToTalk)) && (
                 <div>
                     <iframe
@@ -243,7 +223,7 @@ const RecordingType = (props) => {
                         }}
                         allow="camera; microphone"
                         src={chrome.runtime.getURL('waveform.html')}
-                    ></iframe>
+                    />
                     <Switch
                         label={
                             isMac
@@ -257,7 +237,7 @@ const RecordingType = (props) => {
             )}
             {contentState.recordingType === 'region' && cropActive && (
                 <div>
-                    <div className="popup-content-divider"></div>
+                    <div className="popup-content-divider" />
                     <Switch label={chrome.i18n.getMessage('customAreaLabel')} name="customRegion" value="customRegion" />
                     {contentState.customRegion && <RegionDimensions />}
                 </div>

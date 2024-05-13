@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useContext, useLayoutEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useContext, useLayoutEffect, useRef } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 
 import { RecordTabActive, RecordTabInactive, VideoTabActive, VideoTabInactive, TempLogo, ProfilePic } from '../images/popup/images';
 
 import { Rnd } from 'react-rnd';
 
-import { CloseIconPopup, GrabIconPopup, HelpIconPopup } from '../toolbar/components/SVG';
+import { CloseIconPopup, HelpIconPopup } from '../toolbar/components/SVG';
 
 /* Component import */
 import RecordingTab from './layout/RecordingTab';
@@ -14,8 +14,6 @@ import VideosTab from './layout/VideosTab';
 // Layouts
 import Announcement from './layout/Announcement';
 import SettingsMenu from './layout/SettingsMenu';
-
-import { ReEvalScript } from '../ReEvalScript';
 
 // Context
 import { contentStateContext } from '../context/ContentState';
@@ -39,7 +37,7 @@ const PopupContainer = (props) => {
 
     useEffect(() => {
         // Check chrome storage
-        chrome.storage.local.get(['updatingFromOld'], function (result) {
+        chrome.storage.local.get(['updatingFromOld'], (result) => {
             if (result.updatingFromOld) {
                 setOnboarding(true);
             }
@@ -186,13 +184,13 @@ const PopupContainer = (props) => {
         }));
 
         // Is it on the left or right, also top or bottom
-        let left = xpos < window.innerWidth / 2 ? true : false;
-        let right = xpos < window.innerWidth / 2 ? false : true;
-        let top = ypos < window.innerHeight / 2 ? true : false;
-        let bottom = ypos < window.innerHeight / 2 ? false : true;
+        const left = xpos < window.innerWidth / 2 ? true : false;
+        const right = xpos < window.innerWidth / 2 ? false : true;
+        const top = ypos < window.innerHeight / 2 ? true : false;
+        const bottom = ypos < window.innerHeight / 2 ? false : true;
         let offsetX = xpos;
         let offsetY = ypos;
-        let fixed = d.x + 9 > window.innerWidth ? true : false;
+        const fixed = d.x + 9 > window.innerWidth ? true : false;
 
         if (right) {
             offsetX = window.innerWidth - xpos;
@@ -257,13 +255,13 @@ const PopupContainer = (props) => {
                 height: '100vh'
             }}
         >
-            <div className={'ToolbarBounds' + ' ' + shake}></div>
+            <div className={`ToolbarBounds ${shake}`} />
             <Rnd
                 default={{
                     x: contentState.popupPosition.offsetX,
                     y: contentState.popupPosition.offsetY
                 }}
-                className={'react-draggable' + ' ' + elastic + ' ' + shake + ' ' + dragging}
+                className={`react-draggable ${elastic} ${shake} ${dragging}`}
                 enableResizing={false}
                 dragHandleClassName="drag-area"
                 onDragStart={handleDragStart}
@@ -272,7 +270,7 @@ const PopupContainer = (props) => {
                 ref={DragRef}
             >
                 <div className="popup-container" ref={PopupRef}>
-                    <div className={open ? 'popup-drag-head' : 'popup-drag-head drag-area'}></div>
+                    <div className={open ? 'popup-drag-head' : 'popup-drag-head drag-area'} />
                     <div className={open ? 'popup-controls open' : 'popup-controls drag-area'}>
                         <SettingsMenu shadowRef={props.shadowRef} open={open} setOpen={setOpen} />
                         <div
@@ -298,13 +296,13 @@ const PopupContainer = (props) => {
                     <div className="popup-cutout">
                         <img src={badge} />
                     </div>
-                    <div className="popup-nav"></div>
+                    <div className="popup-nav" />
                     <div className="popup-content">
                         {onboarding && <Announcement setOnboarding={setOnboarding} />}
                         {!onboarding && (
                             <Tabs.Root className="TabsRoot tl" defaultValue="record" onValueChange={onValueChange}>
                                 <Tabs.List className="TabsList tl" data-value={tab} aria-label="Manage your account" tabIndex={0}>
-                                    <div className="pill-anim" ref={pillRef}></div>
+                                    <div className="pill-anim" ref={pillRef} />
                                     <Tabs.Trigger className="TabsTrigger tl" value="record" ref={recordTabRef} tabIndex={0}>
                                         <div className="TabsTriggerIcon">
                                             <img src={tab === 'record' ? RecordTabActive : RecordTabInactive} />
@@ -340,10 +338,6 @@ const PopupContainer = (props) => {
                             {chrome.i18n.getMessage('helpPopup')}
                         </div>
                     )}
-
-                    {/* <Suspense fallback={<></>}>
-                        <ReEvalScript />
-                    </Suspense> */}
                 </div>
             </Rnd>
         </div>

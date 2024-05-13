@@ -3,6 +3,8 @@ import localforage from 'localforage';
 
 import Warning from './warning/Warning';
 import { MsgKey } from '../ReEvalApp/Constant';
+import { sleep } from '../ReEvalApp/utils';
+import { isNil } from 'lodash';
 
 localforage.config({
     driver: localforage.INDEXEDDB, // or choose another driver
@@ -512,12 +514,12 @@ const Recorder = () => {
         destination.current = aCtx.current.createMediaStreamDestination();
         liveStream.current = new MediaStream();
 
+        console.log('data.defaultAudioInput', data.defaultAudioInput, data);
         const micstream = await startAudioStream(data.defaultAudioInput);
         helperAudioStream.current = micstream;
 
         // Check if micstream has an audio track
-        // eslint-disable-next-line no-eq-null, eqeqeq
-        if (helperAudioStream.current != null && helperAudioStream.current.getAudioTracks().length > 0) {
+        if (!isNil(helperAudioStream.current) && helperAudioStream.current.getAudioTracks().length > 0) {
             audioInputGain.current = aCtx.current.createGain();
             audioInputSource.current = aCtx.current.createMediaStreamSource(helperAudioStream.current);
             audioInputSource.current.connect(audioInputGain.current).connect(destination.current);
@@ -525,8 +527,8 @@ const Recorder = () => {
             // No microphone available
         }
 
-        // eslint-disable-next-line no-eq-null, eqeqeq
-        if (helperAudioStream.current != null && !data.micActive) {
+        // // eslint-disable-next-line no-eq-null, eqeqeq
+        if (!isNil(helperAudioStream.current) && !data.micActive) {
             setAudioInputVolume(0);
         }
 
@@ -539,7 +541,7 @@ const Recorder = () => {
             // No system audio available
         }
 
-        // Add the tracks to the stream
+        // // Add the tracks to the stream
         liveStream.current.addTrack(helperVideoStream.current.getVideoTracks()[0]);
         if (
             // eslint-disable-next-line no-eq-null, eqeqeq
@@ -549,7 +551,7 @@ const Recorder = () => {
             liveStream.current.addTrack(destination.current.stream.getAudioTracks()[0]);
         }
 
-        // Send message to go back to the previously active tab
+        // // Send message to go back to the previously active tab
         setStarted(true);
 
         chrome.runtime.sendMessage({ type: 'reset-active-tab' });
@@ -590,10 +592,9 @@ const Recorder = () => {
                          * ReEval send storyboard
                          */
                         chrome.runtime.sendMessage({
-                            type: 'reeval-run-storyboard',
+                            type: MsgKey.REEVAL_RUN_STORYBOARD,
                             options: data?.ReEvalProductionOption
                         });
-                        // chrome.storage.local.remove('ReEvalProductionOption');
                         startStream(data, streamId, options, permissions, permissions2);
                     }
                 });

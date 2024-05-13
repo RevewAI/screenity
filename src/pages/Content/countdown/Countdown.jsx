@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useContext, useCallback } from 'rea
 
 // Context
 import { contentStateContext } from '../context/ContentState';
+import { compareState, plainJSONParse } from '../../ReEvalApp/utils';
 
 const Countdown = () => {
     const [contentState, setContentState] = useContext(contentStateContext);
@@ -53,9 +54,38 @@ const Countdown = () => {
         countdownRef.current = contentState.countdown;
     }, [contentState.countdown]);
 
+    useEffect(async () => {
+        console.log('countdown', await compareState(contentState));
+    }, [contentState]);
+
     const onMessage = useCallback(
-        (request, sender, sendResponse) => {
+        async (request, sender, sendResponse) => {
+            // if (request.type === 'ready-to-record') {
+            //     setCountActive(true);
+            //     setShowCountdown(true);
+            //     startCountdown();
+
+            //     setTimeout(() => {
+            //         if (!cancelRef.current) {
+            //             setShowCountdown(false);
+            //             setCountActive(false);
+            //             cancelRef.current = false;
+            //             setCount(3);
+            //             wrapperRef.current.style.pointerEvents = 'none';
+
+            //             // Play beep sound at 50% volume
+            //             const audio = new Audio(chrome.runtime.getURL('/assets/sounds/beep2.mp3'));
+            //             audio.volume = 0.5;
+            //             audio.play();
+            //             setTimeout(() => {
+            //                 contentState.startRecording();
+            //             }, 500);
+            //         }
+            //     }, count * 1000);
+            // }
+
             if (request.type === 'ready-to-record') {
+                console.log('ready-to-record -->', await compareState(contentState), countdownRef.current);
                 if (countdownRef.current) {
                     setCountActive(true);
                     setShowCountdown(true);
@@ -98,69 +128,70 @@ const Countdown = () => {
 
     useEffect(() => {
         chrome.runtime.onMessage.addListener(onMessage);
-
         return () => {
-            setCountActive(false);
-            setShowCountdown(false);
-            setCount(3);
+            // setCountActive(false);
+            // setShowCountdown(false);
+            // setCount(3);
             chrome.runtime.onMessage.removeListener(onMessage);
         };
     }, []);
 
     // I need to make a 3, 2, 1 countdown, full screen (black overlay with the number in a circle on the middle), with a beep at the end
     return (
-        <div
-            className={!countActive ? 'countdown' : 'countdown recording-countdown'}
-            onClick={() => {
-                // @reeval 避免误触，删除取消倒计时功能
-                // if (countActive) {
-                //   cancelRef.current = true;
-                //   wrapperRef.current.style.pointerEvents = "none";
-                //   setCountActive(false);
-                //   setShowCountdown(false);
-                //   setCount(3);
-                //   contentState.dismissRecording();
-                //   setContentState((prevContentState) => ({
-                //     ...prevContentState,
-                //     recording: false,
-                //     showPopup: true,
-                //     showExtension: true,
-                //   }));
-                // }
-            }}
-            ref={wrapperRef}
-        >
-            {showCountdown && (
-                <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-                        <defs>
-                            <filter id="goo">
-                                <feGaussianBlur in="SourceGraphic" stdDeviation="10" />
-                                <feColorMatrix
-                                    in="blur"
-                                    mode="matrix"
-                                    values="1 0 0 0 0
-                      0 1 0 0 0
-                      0 0 1 0 0
-                      0 0 0 20 -10"
-                                    result="goo"
-                                />
-                            </filter>
-                        </defs>
-                    </svg>
-                    <div className="countdown-circle">
-                        <div className="countdown-number">{count}</div>
-                        <div className="background" ref={backgroundRef}>
-                            <div className="circle" ref={circleRef}></div>
-                            <div className="c c2" ref={c1Ref}></div>
-                            <div className="c c3" ref={c2Ref}></div>
+        <>
+            <div
+                className={!countActive ? 'countdown' : 'countdown recording-countdown'}
+                onClick={() => {
+                    // @reeval 避免误触，删除取消倒计时功能
+                    // if (countActive) {
+                    //   cancelRef.current = true;
+                    //   wrapperRef.current.style.pointerEvents = "none";
+                    //   setCountActive(false);
+                    //   setShowCountdown(false);
+                    //   setCount(3);
+                    //   contentState.dismissRecording();
+                    //   setContentState((prevContentState) => ({
+                    //     ...prevContentState,
+                    //     recording: false,
+                    //     showPopup: true,
+                    //     showExtension: true,
+                    //   }));
+                    // }
+                }}
+                ref={wrapperRef}
+            >
+                {showCountdown && (
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+                            <defs>
+                                <filter id="goo">
+                                    <feGaussianBlur in="SourceGraphic" stdDeviation="10" />
+                                    <feColorMatrix
+                                        in="blur"
+                                        mode="matrix"
+                                        values="1 0 0 0 0
+                                                0 1 0 0 0
+                                                0 0 1 0 0
+                                                0 0 0 20 -10"
+                                        result="goo"
+                                    />
+                                </filter>
+                            </defs>
+                        </svg>
+                        <div className="countdown-circle">
+                            <div className="countdown-number">{count}</div>
+                            <div className="background" ref={backgroundRef}>
+                                <div className="circle" ref={circleRef} />
+                                <div className="c c2" ref={c1Ref} />
+                                <div className="c c3" ref={c2Ref} />
+                            </div>
                         </div>
+                        {/* <div className="countdown-info">{chrome.i18n.getMessage('countdownMessage')}</div> */}
+                        <div className="countdown-overlay" />
                     </div>
-                    <div className="countdown-info">{chrome.i18n.getMessage('countdownMessage')}</div>
-                    <div className="countdown-overlay"></div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </>
     );
 };
 

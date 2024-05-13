@@ -18,12 +18,14 @@
         "no-invalid-this": "off",
         "no-unused-vars": "off",
         "max-nested-callbacks": ["error", 5],
-        "max-params": ["error", 5],
+        "max-params": "off",
+        "complexity": "off",
         "@typescript-eslint/no-unused-vars": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "jsx-no-new-function-as-prop": "off",
         "react/jsx-curly-brace-presence": "off",
-        "react/jsx-no-useless-fragment": "off"
+        "react/jsx-no-useless-fragment": "off",
+        "react/iframe-missing-sandbox": "off"
     }
 }

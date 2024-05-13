@@ -9,6 +9,8 @@ import localforage from 'localforage';
 import './action';
 import './context-menu';
 import './run-storyboard';
+import { compareState } from '../ReEvalApp/utils';
+import { StorageKey } from '../ReEvalApp/Constant';
 
 localforage.config({
     driver: localforage.INDEXEDDB,
@@ -216,6 +218,8 @@ const onActivated = async (activeInfo) => {
     // Check if not recording (needs to hide the extension)
     const { recording } = await chrome.storage.local.get(['recording']);
     const { restarting } = await chrome.storage.local.get(['restarting']);
+    const { [StorageKey.REEVAL_STATE]: reevalState } = await chrome.storage.local.get([StorageKey.REEVAL_STATE]);
+    const { [StorageKey.REEVAL_WINDOW_ID]: windowId } = await chrome.storage.local.get([StorageKey.REEVAL_WINDOW_ID]);
 
     // Update active tab
     if (recording) {
@@ -234,7 +238,7 @@ const onActivated = async (activeInfo) => {
         if (!region && !customRegion) {
             sendMessageTab(activeInfo.tabId, { type: 'recording-check' });
         }
-    } else if (!recording && !restarting) {
+    } else if (!recording && !restarting && !reevalState && windowId !== activeInfo?.windowId) {
         sendMessageTab(activeInfo.tabId, { type: 'recording-ended' });
     }
 
@@ -270,7 +274,7 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
     });
 
     if (activeTab) {
-        onActivated({ tabId: activeTab.id });
+        onActivated({ tabId: activeTab.id, windowId });
     }
 });
 
@@ -280,14 +284,16 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 });
 
 // Check when a user navigates to a different domain in the same tab (chrome.tabs?)
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tabInfo) => {
     if (changeInfo.status === 'complete') {
         // Check if not recording (needs to hide the extension)
         const { recording } = await chrome.storage.local.get(['recording']);
         const { restarting } = await chrome.storage.local.get(['restarting']);
+        const { [StorageKey.REEVAL_STATE]: reevalState } = await chrome.storage.local.get([StorageKey.REEVAL_STATE]);
+        const { [StorageKey.REEVAL_WINDOW_ID]: windowId } = await chrome.storage.local.get([StorageKey.REEVAL_WINDOW_ID]);
         const { tabRecordedID } = await chrome.storage.local.get(['tabRecordedID']);
 
-        if (!recording && !restarting) {
+        if (!recording && !restarting && !reevalState && windowId !== tabInfo?.windowId) {
             sendMessageTab(tabId, { type: 'recording-ended' });
         } else if (recording && tabRecordedID && tabRecordedID === tabId) {
             sendMessageTab(tabId, { type: 'recording-check', force: true });
@@ -429,7 +435,7 @@ const sendChunks = async (override = false) => {
     }
 };
 
-const stopRecording = async () => {
+export const stopRecording = async () => {
     chrome.storage.local.set({ restarting: false });
     const { recordingStartTime } = await chrome.storage.local.get(['recordingStartTime']);
     let duration = Date.now() - recordingStartTime;
@@ -639,7 +645,7 @@ const handleRestart = async () => {
     resetActiveTabRestart();
 };
 
-const sendMessageRecord = async (message) => {
+export const sendMessageRecord = async (message) => {
     // Send a message to the recording tab or offscreen recording document, depending on which was created
     chrome.storage.local.get(['recordingTab', 'offscreen'], (result) => {
         if (result.offscreen) {
@@ -1295,7 +1301,6 @@ const writeFile = async (request) => {
 };
 
 const videoReady = async () => {
-    console.log('ooOoo videoReady', 333333);
     const { backupTab } = await chrome.storage.local.get(['backupTab']);
     if (backupTab) {
         sendMessageTab(backupTab, { type: 'close-writable' });
@@ -1483,8 +1488,10 @@ const resizeWindow = async (width, height) => {
     });
 };
 
-const checkAvailableMemory = (sendResponse) => {
-    navigator.storage.estimate().then((data) => {
+const checkAvailableMemory = async (sendResponse) => {
+    console.log('ooOoo--> startStreaming < 2', await compareState());
+    navigator.storage.estimate().then(async (data) => {
+        console.log('ooOoo--> startStreaming < 3', await compareState(), data);
         sendResponse({ data: data });
     });
 };
@@ -1509,7 +1516,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.type === 'start-rec') {
         startRecording();
     } else if (request.type === 'video-ready') {
-        console.log('||ooOoo -> 1111', request?.options);
         videoReady();
     } else if (request.type === 'start-recording') {
         startRecording();

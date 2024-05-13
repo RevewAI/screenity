@@ -3,7 +3,7 @@
     "name": "__MSG_extName__",
     "description": "__MSG_extDesc__",
     "default_locale": "zh_CN",
-    "version": "3.1.11",
+    "version": "0.1.1",
     "background": {
         "service_worker": "background.bundle.js"
     },
@@ -86,6 +86,19 @@
             "description": "Pause/Resume recording"
         }
     },
-    "permissions": ["identity", "activeTab", "storage", "unlimitedStorage", "downloads", "tabs", "tabCapture", "scripting", "contextMenus"],
-    "optional_permissions": ["offscreen", "desktopCapture", "alarms"]
+    "permissions": [
+        "identity",
+        "activeTab",
+        "storage",
+        "unlimitedStorage",
+        "downloads",
+        "tabs",
+        "tabCapture",
+        "scripting",
+        "contextMenus",
+        "offscreen",
+        "desktopCapture",
+        "alarms"
+    ],
+    "optional_permissions": []
 }

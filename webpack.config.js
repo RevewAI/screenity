@@ -256,8 +256,7 @@ const options = {
             template: path.join(__dirname, 'src', 'pages', 'ReEvalApp', 'index.html'),
             filename: 'reevalapp.html',
             chunks: ['reevalapp'],
-            cache: false,
-            favicon: path.join(__dirname, 'src', 'assets', 'backup-favicon.ico')
+            cache: false
         })
     ]
 };
@@ -265,7 +264,7 @@ const options = {
 if (env.NODE_ENV === 'development') {
     options.devtool = 'cheap-module-source-map';
 } else {
-    options.devtool = 'source-map';
+    // options.devtool = 'cheap-module-source-map';
     options.optimization = {
         minimize: true,
         minimizer: [

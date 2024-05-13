@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useEffect, Suspense } from 'react';
+import React, { useContext, useRef, useEffect } from 'react';
 
 // Components
 import PopupContainer from './popup/PopupContainer';
@@ -26,6 +26,7 @@ import CursorModes from './utils/CursorModes';
 
 // Context
 import { contentStateContext } from './context/ContentState';
+import { compareState, plainJSONParse } from '../ReEvalApp/utils';
 
 const Wrapper = () => {
     const [contentState, setContentState] = useContext(contentStateContext);
@@ -78,6 +79,11 @@ const Wrapper = () => {
         }));
     }, [permissionsRef.current, contentState.showExtension, contentState.permissionsLoaded]);
 
+    useEffect(async () => {
+        console.log('wrapper --->> ', await compareState(contentState));
+        console.log('wrapper --->> ', plainJSONParse(contentState));
+    }, [contentState]);
+
     return (
         <div ref={parentRef}>
             {contentState.showExtension && (
@@ -90,7 +96,7 @@ const Wrapper = () => {
                     ref={permissionsRef}
                     src={chrome.runtime.getURL('permissions.html')}
                     allow="camera *; microphone *"
-                ></iframe>
+                />
             )}
             {contentState.hasOpenedBefore && (
                 <iframe
@@ -102,11 +108,12 @@ const Wrapper = () => {
                     ref={regionCaptureRef}
                     src={chrome.runtime.getURL('region.html')}
                     allow="camera *; microphone *; display-capture *"
-                ></iframe>
+                />
             )}
 
             {contentState.zoomEnabled && <ZoomContainer />}
             <BlurTool />
+
             {contentState.showExtension || contentState.recording ? (
                 <div>
                     {!contentState.recording && !contentState.drawingMode && !contentState.blurMode && (
@@ -136,12 +143,12 @@ const Wrapper = () => {
                                 ) {
                                     setContentState((prevContentState) => ({
                                         ...prevContentState,
-                                        showExtension: false,
+                                        showExtension: true,
                                         showPopup: false
                                     }));
                                 }
                             }}
-                        ></div>
+                        />
                     )}
                     <Canvas />
                     <CursorModes />
@@ -166,7 +173,7 @@ const Wrapper = () => {
                             {contentState.recordingType === 'region' && contentState.customRegion && <Region />}
                             {shadowRef.current && <Modal shadowRef={shadowRef} />}
                             <Countdown />
-                            {contentState.recordingType != 'camera' && <Camera shadowRef={shadowRef} />}
+                            {contentState.recordingType !== 'camera' && <Camera shadowRef={shadowRef} />}
                             {contentState.recordingType === 'camera' && <CameraOnly shadowRef={shadowRef} />}
                             {!(contentState.hideToolbar && contentState.hideUI) && <Toolbar />}
                             {contentState.showPopup && <PopupContainer shadowRef={shadowRef} />}
@@ -175,7 +182,7 @@ const Wrapper = () => {
                     </root.div>
                 </div>
             ) : (
-                <div></div>
+                <div />
             )}
         </div>
     );
