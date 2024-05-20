@@ -178,7 +178,6 @@ const handleAlarm = async (alarm) => {
         // Check if recording
         const { recording } = await chrome.storage.local.get(['recording']);
         if (recording) {
-            console.log('ooOoo', 2222222);
             stopRecording();
             const { recordingTab } = await chrome.storage.local.get(['recordingTab']);
             sendMessageTab(recordingTab, { type: 'stop-recording-tab' });
@@ -471,21 +470,17 @@ export const stopRecording = async () => {
         );
     } else {
         // Close the sandbox tab, open a new one with normal editor
-        chrome.tabs.create(
-            {
-                url: 'editor.html',
-                active: true
-            },
-            (tab) => {
-                chrome.tabs.onUpdated.addListener(function _(tabId, changeInfo, updatedTab) {
-                    if (tabId === tab.id && changeInfo.status === 'complete') {
-                        chrome.tabs.onUpdated.removeListener(_);
-                        chrome.storage.local.set({ sandboxTab: tab.id });
-                        sendChunks();
-                    }
-                });
-            }
-        );
+        const [tab] = await chrome.tabs.query({ url: chrome.runtime.getURL('editor.html'), currentWindow: true });
+        if (tab) await chrome.tabs.remove(tab.id);
+        chrome.tabs.create({ url: 'editor.html', active: true }, (tab) => {
+            chrome.tabs.onUpdated.addListener(function _(tabId, changeInfo, updatedTab) {
+                if (tabId === tab.id && changeInfo.status === 'complete') {
+                    chrome.tabs.onUpdated.removeListener(_);
+                    chrome.storage.local.set({ sandboxTab: tab.id });
+                    sendChunks();
+                }
+            });
+        });
     }
 
     chrome.action.setIcon({ path: 'assets/icon-34.png' });
@@ -509,6 +504,9 @@ const forceProcessing = async () => {
     // Get sandbox tab
     const { sandboxTab } = await chrome.storage.local.get(['sandboxTab']);
 
+    const [tab] = await chrome.tabs.query({ url: chrome.runtime.getURL('editor.html'), currentWindow: true });
+    if (tab) await chrome.tabs.remove(tab.id);
+
     chrome.tabs.create(
         {
             url: editor_url,
@@ -531,7 +529,7 @@ const forceProcessing = async () => {
 
 // For some reason without this the service worker doesn't always work
 chrome.runtime.onStartup.addListener(() => {
-    console.log(`Starting...`);
+    // console.log(`Starting...`);
 });
 
 // Check when action button is clicked
@@ -804,7 +802,6 @@ const offscreenDocument = async (request, tabId = null) => {
                 // });
             } catch (error) {
                 // Open the recorder.html page as a normal tab.
-                console.log('798->', error);
                 chrome.tabs
                     .create({
                         url: 'recorder.html',
@@ -882,7 +879,6 @@ const offscreenDocument = async (request, tabId = null) => {
             });
         } catch (error) {
             // Open the recorder.html page as a normal tab.
-            console.log('798->', error);
             let switchTab = true;
             if (request.camera) {
                 switchTab = false;
@@ -1489,9 +1485,7 @@ const resizeWindow = async (width, height) => {
 };
 
 const checkAvailableMemory = async (sendResponse) => {
-    console.log('ooOoo--> startStreaming < 2', await compareState());
     navigator.storage.estimate().then(async (data) => {
-        console.log('ooOoo--> startStreaming < 3', await compareState(), data);
         sendResponse({ data: data });
     });
 };

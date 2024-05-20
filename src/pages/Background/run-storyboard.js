@@ -109,13 +109,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         await chrome.storage.local.set({ [StorageKey.REEVAL_WINDOW_ID]: windowId });
 
         // 最大化屏幕，准备录制
-        // await chrome.windows.update(windowId, { state: chrome.windows.WindowState.FULLSCREEN });
+        await chrome.windows.update(windowId, { state: chrome.windows.WindowState.FULLSCREEN });
 
         // 状态更新
         await chrome.tabs.sendMessage(activeTab.id, { type: MsgKey.REEVAL_PENDDING_STATE, options: state });
 
         await sleep(500);
-        console.log('ready document loaded -->', MsgKey.REEVAL_PENDDING_STORYBOARD);
 
         // 通知页面，准备录制
         await chrome.tabs.sendMessage(activeTab.id, { type: MsgKey.REEVAL_PENDDING_STORYBOARD, options });
@@ -140,7 +139,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     // 激活tab
                     await chrome.tabs.update(tabId, { highlighted: true });
                     // 传递信息，通知runtime执行高亮文本
-                    console.log(MsgKey.REEVAL_RUN_STORYBOARD, 'oo-2>', options);
                     await chrome.tabs.sendMessage(tabId, { type: MsgKey.REEVAL_RUN_SECTION, options: record });
                     // 等待时间
                     const duration = record?.duration ?? Constants.DURATION;
@@ -160,10 +158,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             await chrome.storage.local.set({ [StorageKey.REEVAL_STATE]: false });
             await chrome.storage.local.remove(StorageKey.REEVAL_WINDOW_ID);
         } catch (e) {
+            await chrome.runtime.sendMessage({ type: 'stop-recording-tab' });
             await chrome.storage.local.set({ recording: false, pendingRecording: false });
             await chrome.storage.local.set({ [StorageKey.REEVAL_STATE]: false });
             await chrome.storage.local.remove(StorageKey.REEVAL_WINDOW_ID);
-            console.log(MsgKey.REEVAL_RUN_STORYBOARD, e);
         }
     }
 

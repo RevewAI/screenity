@@ -16,6 +16,8 @@
 *.jar
 *.rar
 *.tar
+build.zip
+reeval.zip
 
 # hulu use yarn v2 cache must be ignore
 # *.zip

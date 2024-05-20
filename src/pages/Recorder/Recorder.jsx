@@ -168,7 +168,6 @@ const Recorder = () => {
             if (isRestarting.current) return;
             setTimeout(() => {
                 if (!sentLast.current) {
-                    console.log('ooOoo stop', 444444);
                     chrome.runtime.sendMessage({ type: 'video-ready' });
                     isFinishing.current = false;
                 }
@@ -252,9 +251,7 @@ const Recorder = () => {
 
             if (isFinishing.current) {
                 sentLast.current = true;
-                console.log('ooOoo isFinishing.current', 5555555555);
                 await chrome.runtime.sendMessage({ type: 'video-ready', options: 'ssss' });
-                console.log('-------------------------------------');
             }
         };
 
@@ -514,7 +511,6 @@ const Recorder = () => {
         destination.current = aCtx.current.createMediaStreamDestination();
         liveStream.current = new MediaStream();
 
-        console.log('data.defaultAudioInput', data.defaultAudioInput, data);
         const micstream = await startAudioStream(data.defaultAudioInput);
         helperAudioStream.current = micstream;
 
@@ -570,10 +566,12 @@ const Recorder = () => {
             if (data.recordingType === 'camera') {
                 startStream(data, null, null, permissions, permissions2);
             } else if (!isTab.current) {
-                let captureTypes = ['screen', 'window', 'tab', 'audio'];
-                if (tabPreferred.current) {
-                    captureTypes = ['tab', 'screen', 'window', 'audio'];
-                }
+                // let captureTypes = ['screen', 'window', 'tab', 'audio'];
+                // if (tabPreferred.current) {
+                //     captureTypes = ['tab', 'screen', 'window', 'audio'];
+                // }
+
+                const captureTypes = ['screen'];
 
                 const id = chrome.desktopCapture.chooseDesktopMedia(captureTypes, null, (streamId, options) => {
                     if (streamId === undefined || streamId === null || streamId === '') {
@@ -583,12 +581,14 @@ const Recorder = () => {
                             why: 'User cancelled the modal'
                         });
 
+                        // 取消录屏
                         chrome.runtime.sendMessage({
                             type: MsgKey.CANCEL_RECORDING
                         });
                         return;
                     } else {
                         /**
+                         * 开始录屏
                          * ReEval send storyboard
                          */
                         chrome.runtime.sendMessage({
@@ -645,7 +645,6 @@ const Recorder = () => {
             } else if (request.type === 'restart-recording-tab') {
                 restartRecording();
             } else if (request.type === 'stop-recording-tab') {
-                console.log('recorder :::::-->>', 'stop-recording-tab');
                 stopRecording();
             } else if (request.type === 'set-mic-active-tab') {
                 setMic(request);

@@ -74,7 +74,6 @@ export const options = [
 export const ReEvalScript = () => {
     // const data = useRecoilValue(reevalStore);
     const runReEvalScript = () => {
-        console.log('run reeval script');
         chrome.runtime.sendMessage({ type: 'reeval', options: options });
     };
     return (

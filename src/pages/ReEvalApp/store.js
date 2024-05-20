@@ -26,7 +26,6 @@ export const ruyiStore = selectorFamily({
         (config = {}) =>
         async ({ get }) => {
             get(reloadAtom);
-            console.log('ruyiStore->', config);
             const { module, url, method = 'get', params = {}, ...rest } = config;
             const options = {};
             if (module && !url) {
@@ -61,7 +60,6 @@ export const useRuyi = (module) => {
                 message.success('删除成功！');
             },
             put: async (params, data, config) => {
-                console.log('useRuyi->', params, data, config);
                 const method = 'put';
                 await snapshot.getPromise(ruyiStore({ module, params, data, method, ...config }));
                 refresh(ruyiStore({ module }));

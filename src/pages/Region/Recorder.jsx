@@ -217,7 +217,6 @@ const Recorder = () => {
                 setTimeout(() => {
                     if (!sentLast.current) {
                         isFinished.current = true;
-                        console.log('ooOoo onstop', 66666);
                         chrome.runtime.sendMessage({ type: 'video-ready' });
                         isFinishing.current = false;
                         lastTimecode.current = 0;
@@ -337,7 +336,6 @@ const Recorder = () => {
             if (isFinishing.current) {
                 isFinished.current = true;
                 sentLast.current = true;
-                console.log('isFinishing.current', 7777);
                 chrome.runtime.sendMessage({ type: 'video-ready' });
                 lastTimecode.current = 0;
                 hasChunks.current = 0;
@@ -665,7 +663,6 @@ const Recorder = () => {
                     startRecording();
                 }
             } else if (request.type === 'stop-recording-tab') {
-                console.log('region recorder :::::-->>', 'stop-recording-tab');
                 if (isFinishing.current) return;
                 stopRecording();
             } else if (request.type === 'set-mic-active-tab') {

@@ -32,13 +32,11 @@ export function scrollTo(top) {
  * 高亮文本
  */
 export function highlintText(element, text, reg) {
-    console.log('ooOoo--><->', element, text, reg);
     const text$ = text.replace(/\s+/g, '');
     const html = element.innerHTML;
     // 高亮文本，且写入mark标签，方便定位
     const regex = reg ? RegExp(reg) : new RegExp(`(${text})`, 'gi');
     // data-v 用于定位
-    console.log('ooOo->', regex);
     const html$ = html.replace(regex, `<mark data-v="${text$}" style="background: rgb(255, 255, 0)">$1</mark>`);
     element.innerHTML = html$;
     return { markSelector: `[data-v="${text$}"]`, sourceHTML: html };
@@ -113,9 +111,7 @@ export function fuzzyContains(text) {
  * // todo 非精度跨标签处理
  */
 export function closestContainer(text) {
-    console.log('closestContainer.0');
     const [elements, regex, precision] = fuzzyContains(text);
-    console.log('closestContainer.1');
     if (!elements) return [];
     if (typeof precision === 'number') return [elements[0], regex, precision];
     return [];
@@ -132,7 +128,6 @@ export function scrollContent(text, position) {
 
     // 获取文本所在的元素
     const [element, regex, precision] = closestContainer(text);
-    console.log('ooOoo.1~~>', text, element, regex, precision);
     if (!element) return {};
     // 高亮文本
     const { markSelector, sourceHTML } = highlintText(element, text, regex);
@@ -188,7 +183,6 @@ export function push(url) {
 export async function autoScrollByScreenity(options) {
     // 获取配置信息
     const setting = await loadReEvalConfig(options);
-    console.log('oOo.1->获取配置项', setting);
     // 没有配置信息退出
     if (!setting?.length) return;
 
@@ -197,11 +191,9 @@ export async function autoScrollByScreenity(options) {
 
     // 若索引值不匹配，则索引值默认为0
     let inx = getReEvalIndex(source) ?? 0;
-    console.log('oOo.2->获取索引值', inx);
 
     // 当前索引下的配置信息
     const config = setting.at(inx);
-    console.log('oOo.3->当前配置', config);
 
     // 获取目标URL
     const { target } = config;
@@ -214,31 +206,25 @@ export async function autoScrollByScreenity(options) {
 
     const start = Number(new Date());
     do {
-        console.log(`------------------${inx}-----------------------------`);
         const { target, source_content = '', position = 0, time_start, time_end } = setting[inx];
         const source = window.location.href;
 
         // 若URL不一致，则跳转
-        console.log(':::.0->页面跳转->>', compareURL(source, target), source, target);
         if (!compareURL(source, target)) {
-            console.log(':::.0.1->页面跳转', source, target);
             window.location.href = getReEvalURL(target, inx);
             return;
         }
 
         // 按Query.reeavl重写URL, 防止刷新
         push(getReEvalURL(target, inx));
-        console.log(':::.1->重写URL', getReEvalURL(target, inx));
 
         // 滚动到脚本文本位置
         const { selector, sourceHTML } = scrollContent(source_content, position);
-        console.log(':::.2->文本滚动', source_content);
 
         // 脚本执行等待
         await sleep(timeDiff(time_end).diff(timeDiff(time_start)));
         // 删除高亮, 写会源信息
         selector && sourceHTML && $(selector).html(sourceHTML);
-        console.log(':::.3->移除高亮');
         inx++;
     } while (inx < setting.length);
 
@@ -246,7 +232,6 @@ export async function autoScrollByScreenity(options) {
     chrome.storage.local.set({ 'reeval-script': [] });
     // 清楚Query.reeval参数
     push(cleanReEvalURL());
-    console.log('oOo.100->clean');
 }
 
 export async function loadReEvalConfig(options) {
@@ -290,7 +275,6 @@ export async function loadReEvalConfig(options) {
 
 export async function runReEval(config) {
     const { original_sentences } = config;
-    console.log('runReEval ->', config);
     const [content] = original_sentences;
     // 滚动到脚本文本位置
     const { selector, sourceHTML } = scrollContent(content);

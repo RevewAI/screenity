@@ -14,9 +14,6 @@ export const ReEvalUpload = () => {
     const [loading, setLoading] = useState(false);
 
     const upload = async () => {
-        console.log(contentState.blob);
-        console.log('contentState', contentState);
-        console.log('production', production);
         setLoading(true);
         const fileName = `${production.id}.mp4`;
         const file = new File([contentState.blob], fileName);

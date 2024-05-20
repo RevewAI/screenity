@@ -79,10 +79,10 @@ const Wrapper = () => {
         }));
     }, [permissionsRef.current, contentState.showExtension, contentState.permissionsLoaded]);
 
-    useEffect(async () => {
-        console.log('wrapper --->> ', await compareState(contentState));
-        console.log('wrapper --->> ', plainJSONParse(contentState));
-    }, [contentState]);
+    // useEffect(async () => {
+    //     console.log('wrapper --->> ', await compareState(contentState));
+    //     console.log('wrapper --->> ', plainJSONParse(contentState));
+    // }, [contentState]);
 
     return (
         <div ref={parentRef}>

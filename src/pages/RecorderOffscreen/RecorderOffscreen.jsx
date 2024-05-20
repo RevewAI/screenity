@@ -148,7 +148,6 @@ const RecorderOffscreen = () => {
 
             setTimeout(() => {
                 if (!sentLast.current) {
-                    console.log('ooOoo', 99999);
                     chrome.runtime.sendMessage({ type: 'video-ready' });
                     isFinishing.current = false;
                 }
@@ -225,7 +224,6 @@ const RecorderOffscreen = () => {
 
             if (isFinishing.current) {
                 sentLast.current = true;
-                console.log('ooOoo', 8888);
                 chrome.runtime.sendMessage({ type: 'video-ready' });
             }
         };

@@ -6,8 +6,6 @@ import { PlusOutlined, CheckOutlined } from '@ant-design/icons';
 import styles from './styles.module.scss';
 import { cleanReEvalURL } from '../ReEvalApp/bus';
 import { isNil } from 'lodash-es';
-import dayjs from 'dayjs';
-import { compareState, plainJSONParse } from '../ReEvalApp/utils';
 
 export const ReEvalRecord = () => {
     const [contentState, setContentState] = useContext(contentStateContext);
@@ -20,7 +18,6 @@ export const ReEvalRecord = () => {
     // Event listener (extension messaging)
     const messageListener = async (request, sender, sendResponse) => {
         const { type, options } = request;
-        console.log('ooOoo', `messageListener -> ${dayjs().format('HH:mm:ss.SSS')}`, type, await compareState(contentState));
 
         if (type === MsgKey.REEVAL_PENDDING_STATE) {
             setContentState((prevContentState) => {
@@ -76,11 +73,9 @@ export const ReEvalRecord = () => {
     }, [added]);
 
     useEffect(() => {
-        console.log('runtime storage');
         chrome.runtime.onMessage.addListener(messageListener);
         chrome.storage.onChanged.addListener(storageListener);
         chrome.storage.local.get([StorageKey.PAGE_ACTION_BAR, StorageKey.PAGES, StorageKey.PENDDING_SCREEN]).then((changes) => {
-            console.log('oooooo-> changes', changes);
             const {
                 [StorageKey.PAGE_ACTION_BAR]: checked,
                 [StorageKey.PAGES]: pages = [],
@@ -103,11 +98,9 @@ export const ReEvalRecord = () => {
         setShowPageAction(isNil(reeval));
     }, []);
 
-    console.log(contentState);
-
-    useEffect(() => {
-        console.log('wapper', plainJSONParse(contentState));
-    }, [contentState]);
+    // useEffect(() => {
+    //     console.log('wapper', plainJSONParse(contentState));
+    // }, [contentState]);
 
     return (
         <>

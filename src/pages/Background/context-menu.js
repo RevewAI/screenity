@@ -27,16 +27,6 @@ export async function addToReEval(tab) {
 }
 
 chrome.runtime.onInstalled.addListener(async () => {
-    const a = await chrome.storage.local.get(null);
-    console.log('----o> all local storage ', a);
-
-    // @todo by mizi
-    chrome.storage.onChanged.addListener(async (changes) => {
-        console.log('storage change', JSON.parse(JSON.stringify(changes)));
-        const a = await chrome.storage.local.get(null);
-        console.log('------------->><>o change result', JSON.parse(JSON.stringify(a)));
-    });
-
     // await chrome.storage.local.set({
     //     cameraActive: false,
     //     askMicrophone: false,

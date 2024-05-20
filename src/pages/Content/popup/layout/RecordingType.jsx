@@ -63,7 +63,6 @@ const RecordingType = (props) => {
 
     // Start recording
     const startStreaming = async () => {
-        console.log('startStreaming --o>', await compareState(contentState));
         contentState.startStreaming();
     };
 

@@ -219,10 +219,7 @@ const ContentState = (props) => {
     }, []);
 
     const startStreaming = useCallback(async () => {
-        console.log('ooOoo--> startStreaming < 1', await compareState(compareState));
-
         chrome.runtime.sendMessage({ type: 'available-memory' }).then(async (data) => {
-            console.log('ooOoo--> startStreaming < 4', await compareState(compareState), data);
             // Check if there's enough space to keep recording
             if (data.quota < 524288000) {
                 if (typeof contentStateRef.current.openModal === 'function') {
@@ -307,8 +304,6 @@ const ContentState = (props) => {
                     tabRecordedID: null
                 });
 
-                console.log('ooOoo--> startStreaming < 5', await compareState(contentStateRef.current));
-
                 if (contentStateRef.current.recordingType === 'region' && !contentStateRef.current.customRegion) {
                     setContentState((prevContentState) => ({
                         ...prevContentState,
@@ -329,7 +324,6 @@ const ContentState = (props) => {
                         chrome.i18n.getMessage('micMutedModalAction'),
                         chrome.i18n.getMessage('micMutedModalCancel'),
                         async () => {
-                            console.log('ooOoo--> startStreaming < 8', await compareState(contentStateRef.current));
                             chrome.runtime.sendMessage({
                                 type: 'desktop-capture',
                                 region: contentStateRef.current.recordingType === 'region' ? true : false,
@@ -380,8 +374,6 @@ const ContentState = (props) => {
                         camera: contentStateRef.current.recordingType === 'camera' ? true : false
                     });
 
-                    console.log('ooOoo--> startStreaming < 6', await compareState(contentStateRef.current));
-
                     setContentState(async (prevContentState) => {
                         const state = {
                             ...prevContentState,
@@ -389,8 +381,6 @@ const ContentState = (props) => {
                             surface: 'default',
                             pipEnded: false
                         };
-
-                        console.log('ooOoo--> startStreaming < 7', await compareState(state));
 
                         return state;
                     });
@@ -830,8 +820,6 @@ const ContentState = (props) => {
                         showPopup: true
                     };
 
-                    console.log('--->>>', 'toggle-popup', state, request.tab);
-
                     return state;
                 });
                 setTimer(0);
@@ -933,7 +921,6 @@ const ContentState = (props) => {
                     showExtension: false
                 }));
             } else if (request.type === 'stream-error') {
-                console.log(':::::', contentStateRef.current, contentStateRef);
                 contentStateRef.current?.openModal?.(
                     chrome.i18n.getMessage('streamErrorModalTitle'),
                     chrome.i18n.getMessage('streamErrorModalDescription'),

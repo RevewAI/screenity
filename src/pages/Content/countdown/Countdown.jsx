@@ -54,9 +54,9 @@ const Countdown = () => {
         countdownRef.current = contentState.countdown;
     }, [contentState.countdown]);
 
-    useEffect(async () => {
-        console.log('countdown', await compareState(contentState));
-    }, [contentState]);
+    // useEffect(async () => {
+    //     console.log('countdown', await compareState(contentState));
+    // }, [contentState]);
 
     const onMessage = useCallback(
         async (request, sender, sendResponse) => {

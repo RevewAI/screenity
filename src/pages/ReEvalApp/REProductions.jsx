@@ -295,7 +295,6 @@ const moreActions = (module, record) => {
     const camera = async (record) => {
         if (isEmpty(record?.storyboard)) return;
         await startAudioStream();
-        console.log('startAudioStream...');
         chrome.runtime.sendMessage({ type: 'reeval-storyboard', options: record });
     };
 
